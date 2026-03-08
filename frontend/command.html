@@ -177,41 +177,163 @@
                 <div id="unit-map" class="flex-1 rounded border border-primary/10 overflow-hidden"></div>
             </section>
 
-            <!-- KPI Metrics -->
-            <section class="border border-primary/20 bg-background-dark/50 rounded-lg p-4 flex flex-col glow-border">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xs font-bold uppercase tracking-widest flex items-center gap-2 font-mono">
-                        <span class="material-symbols-outlined text-sm">monitoring</span>
-                        Operational KPI Metrics
-                    </h3>
+            <!-- Alert Creation + Broadcast Status -->
+            <section
+                class="border border-primary/20 bg-background-dark/50 rounded-lg p-4 flex flex-col glow-border overflow-hidden">
+                <!-- Tabs -->
+                <div class="flex items-center gap-0 mb-4 border-b border-primary/20">
+                    <button onclick="switchCmdTab('create')" id="tab-create"
+                        class="px-4 py-2 text-[10px] font-bold uppercase tracking-widest font-mono border-b-2 border-primary text-primary transition-colors">CREATE_ALERT</button>
+                    <button onclick="switchCmdTab('broadcast')" id="tab-broadcast"
+                        class="px-4 py-2 text-[10px] font-bold uppercase tracking-widest font-mono border-b-2 border-transparent text-primary/40 hover:text-primary transition-colors">BROADCAST_STATUS</button>
                 </div>
-                <div class="flex-1 grid grid-cols-2 gap-4">
-                    <div class="flex flex-col justify-center border border-primary/10 rounded p-4 bg-primary/5">
-                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2 font-mono">Active Incidents</p>
-                        <div class="flex items-baseline gap-2">
-                            <span id="kpi-incidents" class="text-5xl font-mono font-bold text-primary">0</span>
-                            <span class="text-xs text-red-400">▲ 12%</span>
+
+                <!-- Tab: CREATE_ALERT -->
+                <div id="panel-create" class="flex-1 overflow-y-auto space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label
+                                class="text-[10px] font-mono uppercase tracking-widest opacity-60 block mb-1">Emergency
+                                Type</label>
+                            <select id="alert-type" onchange="updateAlertTemplate()"
+                                class="w-full bg-black border border-primary/30 text-primary text-xs font-mono px-3 py-2 focus:outline-none focus:border-primary">
+                                <option value="FLOOD">🌊 FLOOD</option>
+                                <option value="EARTHQUAKE">🌍 EARTHQUAKE</option>
+                                <option value="FIRE">🔥 FIRE</option>
+                                <option value="MEDICAL">🏥 MEDICAL</option>
+                                <option value="SECURITY">🛡️ SECURITY</option>
+                                <option value="CYCLONE">🌀 CYCLONE</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-mono uppercase tracking-widest opacity-60 block mb-1">Priority
+                                Level</label>
+                            <select id="alert-priority"
+                                class="w-full bg-black border border-primary/30 text-primary text-xs font-mono px-3 py-2 focus:outline-none focus:border-primary">
+                                <option value="CRITICAL" class="text-red-500">🔴 CRITICAL</option>
+                                <option value="HIGH" class="text-orange-400">🟠 HIGH</option>
+                                <option value="MEDIUM" class="text-yellow-400">🟡 MEDIUM</option>
+                                <option value="LOW">🟢 LOW</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="flex flex-col justify-center border border-primary/10 rounded p-4 bg-primary/5">
-                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2 font-mono">Units Deployed</p>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-5xl font-mono font-bold text-primary">20</span>
-                            <span class="text-xs text-primary/60">—</span>
+                    <div>
+                        <label class="text-[10px] font-mono uppercase tracking-widest opacity-60 block mb-1">Target
+                            Zone</label>
+                        <select id="alert-zone"
+                            class="w-full bg-black border border-primary/30 text-primary text-xs font-mono px-3 py-2 focus:outline-none focus:border-primary">
+                            <option value="ALL_ZONES">📍 ALL ZONES — MUMBAI REGION</option>
+                            <option value="Dharavi">ZONE: DHARAVI</option>
+                            <option value="Kurla">ZONE: KURLA</option>
+                            <option value="Andheri">ZONE: ANDHERI</option>
+                            <option value="Bandra">ZONE: BANDRA</option>
+                            <option value="Dadar">ZONE: DADAR</option>
+                            <option value="Colaba">ZONE: COLABA</option>
+                            <option value="Borivali">ZONE: BORIVALI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-mono uppercase tracking-widest opacity-60 block mb-1">Alert
+                            Message <span class="text-primary/40">(auto-filled from template)</span></label>
+                        <textarea id="alert-message" rows="3"
+                            class="w-full bg-black border border-primary/30 text-primary text-xs font-mono px-3 py-2 resize-none focus:outline-none focus:border-primary"></textarea>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="text-[10px] font-mono uppercase tracking-widest opacity-60">Channels:</label>
+                        <label class="flex items-center gap-1 text-[10px] font-mono"><input type="checkbox" checked
+                                class="accent-emerald-500"> SMS</label>
+                        <label class="flex items-center gap-1 text-[10px] font-mono"><input type="checkbox" checked
+                                class="accent-emerald-500"> EMAIL</label>
+                        <label class="flex items-center gap-1 text-[10px] font-mono"><input type="checkbox" checked
+                                class="accent-emerald-500"> PUSH</label>
+                        <label class="flex items-center gap-1 text-[10px] font-mono"><input type="checkbox" checked
+                                class="accent-emerald-500"> SOCIAL</label>
+                    </div>
+                    <button onclick="broadcastAlert()"
+                        class="w-full bg-red-600 text-white py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-red-500 transition-colors flex items-center justify-center gap-2"
+                        id="broadcast-btn">
+                        <span class="material-symbols-outlined text-sm">cell_tower</span>
+                        BROADCAST ALERT
+                    </button>
+                </div>
+
+                <!-- Tab: BROADCAST_STATUS (hidden by default) -->
+                <div id="panel-broadcast" class="flex-1 overflow-y-auto space-y-3 hidden">
+                    <div class="grid grid-cols-2 gap-3" id="channel-cards">
+                        <!-- SMS -->
+                        <div class="border border-primary/10 rounded p-3 bg-primary/5">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="material-symbols-outlined text-sm text-primary">sms</span>
+                                <span class="text-[10px] font-mono font-bold uppercase tracking-widest">SMS</span>
+                            </div>
+                            <div class="text-2xl font-mono font-bold text-primary" id="sms-count">0</div>
+                            <div class="w-full bg-primary/10 h-1.5 mt-2 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full transition-all duration-300 rounded-full" id="sms-bar"
+                                    style="width:0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] font-mono mt-1 opacity-60">
+                                <span id="sms-status">IDLE</span><span id="sms-fail" class="text-red-400">0
+                                    FAILED</span>
+                            </div>
+                        </div>
+                        <!-- EMAIL -->
+                        <div class="border border-primary/10 rounded p-3 bg-primary/5">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="material-symbols-outlined text-sm text-primary">email</span>
+                                <span class="text-[10px] font-mono font-bold uppercase tracking-widest">EMAIL</span>
+                            </div>
+                            <div class="text-2xl font-mono font-bold text-primary" id="email-count">0</div>
+                            <div class="w-full bg-primary/10 h-1.5 mt-2 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full transition-all duration-300 rounded-full" id="email-bar"
+                                    style="width:0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] font-mono mt-1 opacity-60">
+                                <span id="email-status">IDLE</span><span id="email-fail" class="text-red-400">0
+                                    FAILED</span>
+                            </div>
+                        </div>
+                        <!-- PUSH -->
+                        <div class="border border-primary/10 rounded p-3 bg-primary/5">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="material-symbols-outlined text-sm text-primary">notifications_active</span>
+                                <span class="text-[10px] font-mono font-bold uppercase tracking-widest">PUSH</span>
+                            </div>
+                            <div class="text-2xl font-mono font-bold text-primary" id="push-count">0</div>
+                            <div class="w-full bg-primary/10 h-1.5 mt-2 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full transition-all duration-300 rounded-full" id="push-bar"
+                                    style="width:0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] font-mono mt-1 opacity-60">
+                                <span id="push-status">IDLE</span><span id="push-fail" class="text-red-400">0
+                                    FAILED</span>
+                            </div>
+                        </div>
+                        <!-- SOCIAL -->
+                        <div class="border border-primary/10 rounded p-3 bg-primary/5">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="material-symbols-outlined text-sm text-primary">share</span>
+                                <span class="text-[10px] font-mono font-bold uppercase tracking-widest">SOCIAL</span>
+                            </div>
+                            <div class="text-2xl font-mono font-bold text-primary" id="social-count">0</div>
+                            <div class="w-full bg-primary/10 h-1.5 mt-2 rounded-full overflow-hidden">
+                                <div class="bg-primary h-full transition-all duration-300 rounded-full" id="social-bar"
+                                    style="width:0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] font-mono mt-1 opacity-60">
+                                <span id="social-status">IDLE</span><span id="social-fail" class="text-red-400"></span>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex flex-col justify-center border border-primary/10 rounded p-4 bg-primary/5">
-                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2 font-mono">Avg Response Time</p>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-5xl font-mono font-bold text-primary">4.2</span>
-                            <span class="text-xs text-primary/60">MIN</span>
+                    <div class="border border-primary/20 rounded p-3 bg-primary/5 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-mono uppercase tracking-widest opacity-60">TOTAL REACH</span>
+                            <div class="text-3xl font-mono font-bold text-primary" id="total-reach">0</div>
                         </div>
-                    </div>
-                    <div class="flex flex-col justify-center border border-primary/10 rounded p-4 bg-primary/5">
-                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2 font-mono">Resolved Today</p>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-5xl font-mono font-bold text-primary">128</span>
-                            <span class="text-xs text-primary">▲ 8%</span>
+                        <div class="text-right">
+                            <span class="text-[10px] font-mono uppercase tracking-widest opacity-60">LAST
+                                BROADCAST</span>
+                            <div class="text-xs font-mono text-primary/80" id="last-broadcast-time">—</div>
                         </div>
                     </div>
                 </div>
@@ -352,7 +474,6 @@
             }
             incidentStore = incidentStore.slice(0, 20);
             renderTable();
-            document.getElementById('kpi-incidents').textContent = incidentStore.length;
         }
 
         function renderTable() {
@@ -371,6 +492,72 @@
         </tr>`;
             }).join('');
         }
+
+        // ── Alert Creation Tab Functions ──────────────────────
+        function switchCmdTab(tab) {
+            document.getElementById('panel-create').classList.toggle('hidden', tab !== 'create');
+            document.getElementById('panel-broadcast').classList.toggle('hidden', tab !== 'broadcast');
+            document.getElementById('tab-create').classList.toggle('border-primary', tab === 'create');
+            document.getElementById('tab-create').classList.toggle('text-primary', tab === 'create');
+            document.getElementById('tab-create').classList.toggle('border-transparent', tab !== 'create');
+            document.getElementById('tab-create').classList.toggle('text-primary/40', tab !== 'create');
+            document.getElementById('tab-broadcast').classList.toggle('border-primary', tab === 'broadcast');
+            document.getElementById('tab-broadcast').classList.toggle('text-primary', tab === 'broadcast');
+            document.getElementById('tab-broadcast').classList.toggle('border-transparent', tab !== 'broadcast');
+            document.getElementById('tab-broadcast').classList.toggle('text-primary/40', tab !== 'broadcast');
+        }
+
+        function updateAlertTemplate() {
+            const type = document.getElementById('alert-type').value;
+            const zone = document.getElementById('alert-zone').value;
+            const tmpl = ALERT_TEMPLATES[type];
+            if (tmpl) {
+                document.getElementById('alert-message').value = tmpl.body.replace('{zone}', zone === 'ALL_ZONES' ? 'MUMBAI REGION' : zone).replace('{magnitude}', (Math.random() * 3 + 2).toFixed(1));
+            }
+        }
+
+        function broadcastAlert() {
+            const btn = document.getElementById('broadcast-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> BROADCASTING...';
+            btn.classList.add('opacity-50');
+
+            // Auto-switch to broadcast tab
+            switchCmdTab('broadcast');
+
+            // Reset channels
+            ['sms', 'email', 'push', 'social'].forEach(ch => {
+                document.getElementById(ch + '-count').textContent = '0';
+                document.getElementById(ch + '-bar').style.width = '0%';
+                document.getElementById(ch + '-status').textContent = 'SENDING...';
+                if (document.getElementById(ch + '-fail')) document.getElementById(ch + '-fail').textContent = '0 FAILED';
+            });
+
+            let totalReach = 0;
+            simulateBroadcast(
+                { type: document.getElementById('alert-type').value },
+                (ch, stats) => {
+                    document.getElementById(ch.id + '-count').textContent = stats.delivered.toLocaleString();
+                    document.getElementById(ch.id + '-bar').style.width = (stats.progress * 100).toFixed(0) + '%';
+                    document.getElementById(ch.id + '-status').textContent = stats.progress >= 1 ? 'DELIVERED ✓' : 'SENDING...';
+                    if (document.getElementById(ch.id + '-fail')) document.getElementById(ch.id + '-fail').textContent = stats.failed + ' FAILED';
+                    totalReach = 0;
+                    ['sms', 'email', 'push', 'social'].forEach(id => {
+                        totalReach += parseInt(document.getElementById(id + '-count').textContent.replace(/,/g, '') || '0');
+                    });
+                    document.getElementById('total-reach').textContent = totalReach.toLocaleString();
+                },
+                () => {
+                    document.getElementById('last-broadcast-time').textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-symbols-outlined text-sm">cell_tower</span> BROADCAST ALERT';
+                    btn.classList.remove('opacity-50');
+                }
+            );
+        }
+
+        // Initialize alert template on load
+        updateAlertTemplate();
 
         renderHeatmap();
         loadIncidents();
