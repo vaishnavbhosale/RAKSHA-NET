@@ -1,4 +1,8 @@
 package com.RAKSHA.NET.repository;
 
-public class CitizenStatusUpdateRepository {
+
+import com.RAKSHA.NET.model.CitizenStatusUpdate;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CitizenStatusUpdateRepository extends JpaRepository<CitizenStatusUpdate, Long> {
 }

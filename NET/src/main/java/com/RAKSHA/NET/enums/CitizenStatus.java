@@ -1,4 +1,8 @@
 package com.RAKSHA.NET.enums;
 
-public class CitizenStatus {
+
+public enum CitizenStatus {
+    SAFE,
+    NEED_HELP,
+    MEDICAL
 }
