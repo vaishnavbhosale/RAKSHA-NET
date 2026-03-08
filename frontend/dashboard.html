@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Citizen Dashboard — RAKSHA-NET</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <!-- Leaflet CSS + JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { "primary": "#00ff88", "background-dark": "#000000" },
+                    fontFamily: { "display": ["JetBrains Mono", "monospace"], "sans": ["JetBrains Mono", "monospace"] },
+                    borderRadius: { "DEFAULT": "0px", "lg": "2px", "xl": "4px", "full": "9999px" },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+        }
+
+        .glow-border {
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.2);
+        }
+
+        @keyframes pulse-red {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.7
+            }
+
+            70% {
+                transform: scale(1.1);
+                opacity: 1
+            }
+
+            100% {
+                transform: scale(0.95);
+                opacity: 0.7
+            }
+        }
+
+        .pulse-red {
+            animation: pulse-red 2s infinite;
+        }
+
+        /* Dark map tiles */
+        .leaflet-container {
+            background: #000 !important;
+        }
+
+        .leaflet-tile {
+            filter: invert(1) hue-rotate(180deg) brightness(0.6) contrast(1.4) saturate(0.3);
+        }
+
+        .leaflet-control-zoom a {
+            background: #000 !important;
+            color: #00ff88 !important;
+            border-color: #00ff8840 !important;
+        }
+
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+
+        /* Profile modal */
+        .modal-bg {
+            background: rgba(0, 0, 0, 0.85);
+        }
+    </style>
+</head>
+
+<body class="bg-background-dark text-primary selection:bg-primary selection:text-black antialiased">
+    <div class="relative flex h-screen w-full overflow-hidden border-4 border-primary/20">
+        <!-- Sidebar Navigation -->
+        <aside class="w-20 flex flex-col items-center py-6 border-r border-primary/40 bg-black">
+            <div class="mb-10"><a href="index.html"><span
+                        class="material-symbols-outlined text-primary text-4xl">shield_with_heart</span></a></div>
+            <nav class="flex flex-col gap-8 flex-1">
+                <a class="flex flex-col items-center gap-1 group" href="dashboard.html">
+                    <span class="material-symbols-outlined text-3xl bg-primary text-black p-1">home</span>
+                    <span class="text-[10px] font-bold">HOME</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 group text-red-500" href="sos.html">
+                    <span
+                        class="material-symbols-outlined text-3xl group-hover:bg-red-500 group-hover:text-black p-1 transition-colors">warning</span>
+                    <span class="text-[10px] font-bold">SOS</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 group" href="command.html">
+                    <span
+                        class="material-symbols-outlined text-3xl group-hover:bg-primary group-hover:text-black p-1 transition-colors">monitoring</span>
+                    <span class="text-[10px] font-bold">CMD</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 group" href="heatmap.html">
+                    <span
+                        class="material-symbols-outlined text-3xl group-hover:bg-primary group-hover:text-black p-1 transition-colors">notifications</span>
+                    <span class="text-[10px] font-bold">ALERTS</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 group" href="dashboard.html">
+                    <span
+                        class="material-symbols-outlined text-3xl group-hover:bg-primary group-hover:text-black p-1 transition-colors">map</span>
+                    <span class="text-[10px] font-bold">MAP</span>
+                </a>
+            </nav>
+            <div class="mt-auto">
+                <button onclick="toggleProfile()"
+                    class="size-10 rounded-full border border-primary/50 bg-primary/10 flex items-center justify-center hover:bg-primary/30 transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-sm">person</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full">
+            <!-- Top Navbar -->
+            <header
+                class="h-16 border-b border-primary/40 flex items-center justify-between px-8 bg-black/50 backdrop-blur-md">
+                <div class="flex items-center gap-6">
+                    <div class="flex flex-col">
+                        <span class="text-xs text-primary/60">NODE_LOCATION</span>
+                        <span class="text-sm font-bold tracking-widest uppercase">REGION: MUMBAI-WEST</span>
+                    </div>
+                    <div class="h-8 w-[1px] bg-primary/20"></div>
+                    <div class="flex flex-col">
+                        <span class="text-xs text-primary/60">NETWORK_STATUS</span>
+                        <span class="text-sm font-bold text-primary flex items-center gap-2 uppercase" id="net-status">
+                            <span class="size-2 bg-primary rounded-full animate-pulse"></span> CONNECTED
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex bg-black border border-primary/40 p-1">
+                        <button class="px-4 py-1 text-xs font-bold bg-primary text-black">I AM SAFE</button>
+                        <a href="sos.html"
+                            class="px-4 py-1 text-xs font-bold text-red-500 border border-red-500/0 hover:border-red-500/50 transition-all">NEED
+                            HELP</a>
+                    </div>
+                    <span class="text-[10px] font-mono text-primary/60 hidden lg:block">CITIZEN_ID: #44892</span>
+                </div>
+            </header>
+
+            <!-- Map + Content -->
+            <div class="flex-1 relative overflow-hidden flex flex-col">
+                <!-- Interactive Leaflet Map -->
+                <div class="flex-1 relative">
+                    <div id="map" class="w-full h-full z-0"></div>
+                    <!-- Search Overlay -->
+                    <div class="absolute top-4 left-4 z-[1000] w-72">
+                        <div
+                            class="flex items-center bg-black/80 border border-primary/60 px-4 py-2 gap-3 backdrop-blur-md">
+                            <span class="material-symbols-outlined text-primary/60">search</span>
+                            <input id="search-input"
+                                class="bg-transparent border-none focus:ring-0 text-primary placeholder:text-primary/30 w-full uppercase text-sm"
+                                placeholder="SEARCH LOCATION..." type="text"
+                                onkeydown="if(event.key==='Enter')searchLocation()" />
+                        </div>
+                    </div>
+                    <!-- Map Legend -->
+                    <div class="absolute bottom-4 right-4 z-[1000]">
+                        <div class="bg-black/80 border border-primary/60 p-3 backdrop-blur-md">
+                            <div class="text-[10px] font-bold mb-2 border-b border-primary/20 pb-1">MAP_LEGEND</div>
+                            <div class="flex flex-col gap-1.5">
+                                <div class="flex items-center gap-2"><span
+                                        class="size-2 bg-primary rounded-full"></span><span
+                                        class="text-[10px]">SAFE_ZONE</span></div>
+                                <div class="flex items-center gap-2"><span
+                                        class="size-2 bg-orange-500 rounded-full"></span><span
+                                        class="text-[10px]">CAUTION_AREA</span></div>
+                                <div class="flex items-center gap-2"><span
+                                        class="size-2 bg-red-600 rounded-full pulse-red"></span><span
+                                        class="text-[10px]">CRITICAL_DANGER</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Terminal Log -->
+                <div class="h-44 bg-black border-t-2 border-primary/60 flex flex-col">
+                    <div class="flex items-center justify-between px-4 py-1 bg-primary/10 border-b border-primary/20">
+                        <span class="text-[10px] font-bold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">terminal</span> LIVE_GEO-FENCE_LOGS
+                        </span>
+                        <span class="text-[10px] animate-pulse">LIVE_STREAMING</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-3 font-mono text-xs space-y-1" id="log-feed"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="w-56 border-l border-primary/40 bg-black flex flex-col p-5 hidden xl:flex">
+            <h3 class="text-xs font-bold mb-5 border-b border-primary/20 pb-2">SYSTEM_HEALTH</h3>
+            <div class="space-y-5">
+                <div>
+                    <span class="text-[10px] text-primary/60 block mb-1">LATENCY</span>
+                    <span class="text-lg font-bold"><span
+                            class="size-2 bg-primary rounded-full inline-block mr-2"></span>14ms</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-primary/60 block mb-1">ACTIVE_EVENTS</span>
+                    <span class="text-2xl font-bold text-red-400" id="active-events">5</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-primary/60 block mb-1">NETWORK_LOAD</span>
+                    <div class="w-full bg-primary/10 h-1">
+                        <div class="bg-primary h-full w-[65%]"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] mt-1"><span>65%</span><span
+                            class="text-primary">OPTIMAL</span></div>
+                </div>
+                <div class="pt-4 border-t border-primary/20">
+                    <span class="text-[10px] text-primary/60 block mb-2">ADVISORY</span>
+                    <div class="bg-primary/5 border border-primary/20 p-2 text-[10px]">
+                        <p class="leading-relaxed">Stay within safe zones. Emergency resources positioned at all sector
+                            checkpoints.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center modal-bg">
+        <div class="bg-black border-2 border-primary/40 p-6 w-80 max-w-[90vw]">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold uppercase tracking-widest">CITIZEN_PROFILE</h3>
+                <button onclick="toggleProfile()" class="text-primary/60 hover:text-primary"><span
+                        class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="flex items-center gap-4 mb-4 pb-4 border-b border-primary/20">
+                <div
+                    class="size-14 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold">CITIZEN #44892</div>
+                    <div class="text-[10px] text-primary/60">CLEARANCE: TIER-2</div>
+                    <div class="text-[10px] text-primary/60">SECTOR: MUMBAI-WEST</div>
+                </div>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div class="flex justify-between"><span class="text-primary/60">STATUS</span><span
+                        class="text-primary">● ACTIVE</span></div>
+                <div class="flex justify-between"><span class="text-primary/60">NODE_ID</span><span>MUM-WEST-092</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">LAST_PING</span><span>2s ago</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">ENCRYPTION</span><span>AES-256</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">SOS_COUNT</span><span
+                        id="profile-sos-count">0</span></div>
+            </div>
+            <button onclick="toggleProfile()"
+                class="mt-4 w-full bg-primary/10 border border-primary/30 text-primary py-2 text-xs font-bold uppercase tracking-widest hover:bg-primary/20 transition-colors">CLOSE_TERMINAL</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize Leaflet map centered on Mumbai
+        const map = L.map('map', { zoomControl: false }).setView([19.0760, 72.8777], 12);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // Dark-themed tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Custom marker icons
+        function createIcon(color, size = 12) {
+            return L.divIcon({
+                className: '',
+                html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;box-shadow:0 0 ${size}px ${color};"></div>`,
+                iconSize: [size, size],
+                iconAnchor: [size / 2, size / 2]
+            });
+        }
+
+        // Add incident markers on Mumbai
+        const markers = [
+            { lat: 19.0411, lng: 72.8545, type: 'CRITICAL', label: 'FIRE — Dharavi', color: '#ef4444' },
+            { lat: 19.0728, lng: 72.8826, type: 'WARNING', label: 'FLOOD — Kurla Station', color: '#f97316' },
+            { lat: 19.1136, lng: 72.8697, type: 'SAFE', label: 'PATROL — Andheri West', color: '#00ff88' },
+            { lat: 19.0596, lng: 72.8295, type: 'CRITICAL', label: 'MEDICAL — Bandra ER', color: '#ef4444' },
+            { lat: 19.0178, lng: 72.8478, type: 'SAFE', label: 'UNIT R-04 — Dadar', color: '#00ff88' },
+            { lat: 18.9067, lng: 72.8147, type: 'SAFE', label: 'CLEARED — Colaba', color: '#00ff88' },
+            { lat: 19.0198, lng: 72.8456, type: 'WARNING', label: 'EARTHQUAKE TREMORS', color: '#eab308' },
+        ];
+
+        markers.forEach(m => {
+            const size = m.type === 'CRITICAL' ? 16 : 12;
+            const marker = L.marker([m.lat, m.lng], { icon: createIcon(m.color, size) }).addTo(map);
+            marker.bindPopup(`<div style="font-family:JetBrains Mono,monospace;font-size:11px;color:#00ff88;background:#000;padding:8px;border:1px solid #00ff8840;min-width:150px;">
+        <div style="font-weight:bold;margin-bottom:4px;">${m.label}</div>
+        <div style="font-size:9px;opacity:0.6;">STATUS: ${m.type}</div>
+        <div style="font-size:9px;opacity:0.6;">LAT: ${m.lat.toFixed(4)} LNG: ${m.lng.toFixed(4)}</div>
+    </div>`, { className: 'custom-popup' });
+        });
+
+        // Search location
+        function searchLocation() {
+            const q = document.getElementById('search-input').value.trim();
+            if (!q) return;
+            // Simple predefined locations
+            const locations = {
+                'mumbai': [19.0760, 72.8777], 'dharavi': [19.0411, 72.8545], 'kurla': [19.0728, 72.8826],
+                'andheri': [19.1136, 72.8697], 'bandra': [19.0596, 72.8295], 'dadar': [19.0178, 72.8478],
+                'colaba': [18.9067, 72.8147], 'borivali': [19.2307, 72.8567], 'pune': [18.5204, 73.8567],
+            };
+            const key = q.toLowerCase();
+            if (locations[key]) { map.flyTo(locations[key], 14, { duration: 1.5 }); }
+            else { map.flyTo([19.0760, 72.8777], 12, { duration: 1 }); }
+        }
+
+        // Live log feed
+        const LOG_ENTRIES = [
+            { type: 'ALERT_EVAC', msg: 'Mandatory evacuation initiated in Sector 4.', dist: '2.4km NW', color: 'text-red-400' },
+            { type: 'WRN_BRIDGE', msg: 'Structural integrity warning: Bandra Sealink.', dist: '4.1km S', color: 'text-orange-400' },
+            { type: 'MSG_SAFE', msg: 'Safe zone Alpha supplies restocked.', dist: '0.8km E', color: 'text-primary' },
+            { type: 'ALERT_QUAKE', msg: 'Seismic activity detected: 2.1 magnitude.', dist: '12km N', color: 'text-yellow-400' },
+            { type: 'SYS_INFO', msg: 'Network handshake verified with node #MUM-22.', dist: '0.1km', color: 'text-primary/60' },
+            { type: 'ALERT_FIRE', msg: 'Fire reported in block D-7. Units dispatched.', dist: '1.3km W', color: 'text-red-400' },
+            { type: 'MSG_SAFE', msg: 'Flood waters receding in Sector 2.', dist: '3.5km SE', color: 'text-primary' },
+            { type: 'WRN_CROWD', msg: 'Large gathering near railway station.', dist: '2.0km NE', color: 'text-orange-400' },
+        ];
+
+        let logIndex = 0;
+        function addLogEntry() {
+            const feed = document.getElementById('log-feed');
+            const entry = LOG_ENTRIES[logIndex % LOG_ENTRIES.length];
+            const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const div = document.createElement('div');
+            div.className = 'flex gap-3 items-start';
+            div.innerHTML = `<span class="text-primary/40 whitespace-nowrap">[${time}]</span><span class="font-bold ${entry.color} whitespace-nowrap">${entry.type}</span><span class="flex-1">${entry.msg}</span><span class="text-primary/30 whitespace-nowrap">${entry.dist}</span>`;
+            feed.prepend(div);
+            if (feed.children.length > 50) feed.lastChild.remove();
+            logIndex++;
+        }
+        for (let i = 0; i < 5; i++) addLogEntry();
+        setInterval(addLogEntry, 3000);
+
+        // Profile
+        function toggleProfile() {
+            const modal = document.getElementById('profile-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                const history = JSON.parse(localStorage.getItem('raksha_sos_history') || '[]');
+                document.getElementById('profile-sos-count').textContent = history.length;
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        updateStatus('net-status');
+        setInterval(() => { document.getElementById('active-events').textContent = Math.floor(Math.random() * 5) + 3; }, 8000);
+    </script>
+</body>
+
+</html>

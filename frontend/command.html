@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Command Center — RAKSHA-NET</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { "primary": "#00ff88", "background-dark": "#000000" },
+                    fontFamily: { "display": ["Inter", "sans-serif"], "mono": ["JetBrains Mono", "monospace"] },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                }
+            }
+        }
+    </script>
+    <style>
+        .glow-border {
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.2);
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+
+            100% {
+                opacity: 1
+            }
+        }
+
+        .blinking-red {
+            animation: blink 1s infinite;
+        }
+
+        .leaflet-container {
+            background: #000 !important;
+        }
+
+        .leaflet-tile {
+            filter: invert(1) hue-rotate(180deg) brightness(0.6) contrast(1.4) saturate(0.3);
+        }
+
+        .leaflet-control-zoom a {
+            background: #000 !important;
+            color: #00ff88 !important;
+            border-color: #00ff8840 !important;
+        }
+
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="bg-background-dark font-display text-primary antialiased">
+    <div class="relative flex h-screen w-full flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="flex items-center justify-between border-b border-primary/30 bg-background-dark px-6 py-3">
+            <div class="flex items-center gap-4">
+                <a href="index.html"><span class="material-symbols-outlined text-primary text-3xl">security</span></a>
+                <h1 class="text-xl font-bold tracking-widest text-primary uppercase font-mono">RAKSHA-NET COMMAND CENTER
+                </h1>
+                <div class="flex items-center gap-2 ml-4 px-3 py-1 border border-red-500 rounded">
+                    <span class="size-2 rounded-full bg-red-500 blinking-red"></span>
+                    <span class="text-red-500 text-xs font-bold tracking-tighter uppercase">LIVE STATUS: ACTIVE</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="hidden md:flex gap-4 items-center">
+                    <div class="text-right">
+                        <p class="text-[10px] uppercase tracking-widest opacity-60">System Clock</p>
+                        <p class="font-mono text-sm" id="live-clock">--:--:--</p>
+                    </div>
+                    <a href="sos.html"
+                        class="flex items-center justify-center rounded bg-red-600 px-6 py-2 text-white text-xs font-bold uppercase tracking-widest hover:bg-red-700 transition-colors">BROADCAST
+                        SOS</a>
+                </div>
+                <button onclick="toggleProfile()"
+                    class="h-10 w-10 border border-primary/50 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/30 transition-colors"
+                    title="Profile">
+                    <span class="material-symbols-outlined">person</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <main class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-2 grid-rows-2 gap-4 overflow-hidden">
+            <!-- Distress Heatmap -->
+            <section class="border border-primary/20 bg-background-dark/50 rounded-lg p-4 flex flex-col glow-border">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold uppercase tracking-widest flex items-center gap-2 font-mono">
+                        <span class="material-symbols-outlined text-sm">grid_view</span>
+                        Distress Heatmap :: Real-Time
+                    </h3>
+                    <span class="text-[10px] font-mono opacity-60 uppercase">Refresh: 0.5s</span>
+                </div>
+                <div class="flex-1 relative overflow-hidden rounded border border-primary/10" id="heatmap-grid">
+                    <div class="absolute inset-0 grid grid-cols-12 grid-rows-8 gap-px bg-primary/5" id="grid-cells">
+                    </div>
+                    <div
+                        class="absolute top-4 left-4 z-10 flex flex-col gap-1 bg-black/70 p-2 border border-primary/20">
+                        <div class="flex items-center gap-2">
+                            <div class="size-3 bg-red-500"></div><span class="text-[9px] font-mono">CRITICAL ZONE</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="size-3 bg-orange-500"></div><span class="text-[9px] font-mono">WARNING
+                                ZONE</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="size-3 bg-primary/40"></div><span class="text-[9px] font-mono">SAFE ZONE</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live Incident Queue -->
+            <section class="border border-primary/20 bg-background-dark/50 rounded-lg p-4 flex flex-col glow-border">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold uppercase tracking-widest flex items-center gap-2 font-mono">
+                        <span class="material-symbols-outlined text-sm">list_alt</span>
+                        Live Incident Queue
+                    </h3>
+                    <span
+                        class="material-symbols-outlined text-sm cursor-pointer hover:rotate-180 transition-transform duration-500"
+                        onclick="loadIncidents()">sync</span>
+                </div>
+                <div class="flex-1 font-mono text-xs overflow-y-auto">
+                    <table class="w-full">
+                        <thead class="sticky top-0 bg-background-dark border-b border-primary/20 text-left">
+                            <tr>
+                                <th class="pb-2 opacity-60">ID</th>
+                                <th class="pb-2 opacity-60">TYPE</th>
+                                <th class="pb-2 opacity-60">SEVERITY</th>
+                                <th class="pb-2 opacity-60">LOCATION</th>
+                                <th class="pb-2 opacity-60">TIME</th>
+                                <th class="pb-2 opacity-60">ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incident-table" class="divide-y divide-primary/10"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Responder Unit Tracker — NOW WITH LEAFLET MAP -->
+            <section class="border border-primary/20 bg-background-dark/50 rounded-lg p-4 flex flex-col glow-border">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold uppercase tracking-widest flex items-center gap-2 font-mono">
+                        <span class="material-symbols-outlined text-sm">my_location</span>
+                        Responder Unit Tracker
+                    </h3>
+                    <div class="flex gap-2 text-[10px] font-mono">
+                        <span class="flex items-center gap-1"><span
+                                class="size-2 rounded-full bg-primary"></span>Available</span>
+                        <span class="flex items-center gap-1"><span
+                                class="size-2 rounded-full bg-orange-500"></span>Dispatched</span>
+                        <span class="flex items-center gap-1"><span
+                                class="size-2 rounded-full bg-blue-500"></span>En-Route</span>
+                    </div>
+                </div>
+                <div id="unit-map" class="flex-1 rounded border border-primary/10 overflow-hidden"></div>
+            </section>
+
+            <!-- KPI Metrics -->
+            <section class="border border-primary/20 bg-background-dark/50 rounded-lg p-4 flex flex-col glow-border">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold uppercase tracking-widest flex items-center gap-2 font-mono">
+                        <span class="material-symbols-outlined text-sm">monitoring</span>
+                        Operational KPI Metrics
+                    </h3>
+                </div>
+                <div class="flex-1 grid grid-cols-2 gap-4">
+                    <div class="flex flex-col justify-center border border-primary/10 rounded p-4 bg-primary/5">
+                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2 font-mono">Active Incidents</p>
+                        <div class="flex items-baseline gap-2">
+                            <span id="kpi-incidents" class="text-5xl font-mono font-bold text-primary">0</span>
+                            <span class="text-xs text-red-400">▲ 12%</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center border border-primary/10 rounded p-4 bg-primary/5">
+                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2 font-mono">Units Deployed</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-5xl font-mono font-bold text-primary">20</span>
+                            <span class="text-xs text-primary/60">—</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center border border-primary/10 rounded p-4 bg-primary/5">
+                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2 font-mono">Avg Response Time</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-5xl font-mono font-bold text-primary">4.2</span>
+                            <span class="text-xs text-primary/60">MIN</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center border border-primary/10 rounded p-4 bg-primary/5">
+                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2 font-mono">Resolved Today</p>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-5xl font-mono font-bold text-primary">128</span>
+                            <span class="text-xs text-primary">▲ 8%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="h-8 border-t border-primary/10 bg-background-dark px-4 flex items-center justify-between">
+            <div class="flex items-center gap-4 text-[10px] uppercase tracking-widest opacity-50 font-mono">
+                <span>LAT: 19.076° N</span><span>LONG: 72.877° E</span><span>ZONE: ASIA-SOUTH-1</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_5px_#00ff88]"></div>
+                <span class="text-[10px] uppercase tracking-widest opacity-50 font-mono"
+                    id="connection-ts">CONNECTION_STABLE</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center"
+        style="background:rgba(0,0,0,0.85)">
+        <div class="bg-black border-2 border-primary/40 p-6 w-80 max-w-[90vw] font-mono">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold uppercase tracking-widest">CITIZEN_PROFILE</h3>
+                <button onclick="toggleProfile()" class="text-primary/60 hover:text-primary"><span
+                        class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="flex items-center gap-4 mb-4 pb-4 border-b border-primary/20">
+                <div
+                    class="size-14 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold">CITIZEN #44892</div>
+                    <div class="text-[10px] text-primary/60">CLEARANCE: TIER-2</div>
+                    <div class="text-[10px] text-primary/60">SECTOR: MUMBAI-WEST</div>
+                </div>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div class="flex justify-between"><span class="text-primary/60">STATUS</span><span
+                        class="text-primary">&#11044; ACTIVE</span></div>
+                <div class="flex justify-between"><span class="text-primary/60">NODE_ID</span><span>MUM-WEST-092</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">LAST_PING</span><span>2s ago</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">ENCRYPTION</span><span>AES-256</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">SOS_COUNT</span><span
+                        id="cmd-sos-count">0</span></div>
+            </div>
+            <button onclick="toggleProfile()"
+                class="mt-4 w-full bg-primary/10 border border-primary/30 text-primary py-2 text-xs font-bold uppercase tracking-widest hover:bg-primary/20 transition-colors">CLOSE_TERMINAL</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        startClock('live-clock');
+        let incidentStore = [];
+
+        // Heatmap grid
+        function renderHeatmap() {
+            const grid = document.getElementById('grid-cells');
+            grid.innerHTML = '';
+            for (let i = 0; i < 96; i++) {
+                const cell = document.createElement('div');
+                const intensity = Math.random();
+                if (intensity > 0.9) cell.className = 'bg-red-500/60';
+                else if (intensity > 0.7) cell.className = 'bg-orange-500/40';
+                else if (intensity > 0.5) cell.className = 'bg-primary/30';
+                else if (intensity > 0.3) cell.className = 'bg-primary/15';
+                else cell.className = 'bg-primary/5';
+                grid.appendChild(cell);
+            }
+        }
+
+        // Profile modal
+        function toggleProfile() {
+            const modal = document.getElementById('profile-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                const history = JSON.parse(localStorage.getItem('raksha_sos_history') || '[]');
+                document.getElementById('cmd-sos-count').textContent = history.length;
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // Leaflet unit tracker map
+        const unitMap = L.map('unit-map', { zoomControl: false }).setView([19.0760, 72.8777], 12);
+        L.control.zoom({ position: 'bottomright' }).addTo(unitMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(unitMap);
+
+        function createUnitIcon(color, label) {
+            return L.divIcon({
+                className: '',
+                html: `<div style="display:flex;flex-direction:column;align-items:center;">
+            <div style="width:20px;height:20px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 0 10px ${color};"></div>
+            <span style="font-family:JetBrains Mono;font-size:9px;background:#000;color:${color};border:1px solid ${color}40;padding:0 4px;margin-top:2px;">${label}</span>
+        </div>`,
+                iconSize: [30, 40],
+                iconAnchor: [15, 35]
+            });
+        }
+
+        const units = [
+            { lat: 19.0860, lng: 72.8480, label: 'R-01', color: '#00ff88', status: 'Available' },
+            { lat: 19.0728, lng: 72.8826, label: 'R-07', color: '#f97316', status: 'Dispatched to Kurla' },
+            { lat: 19.0178, lng: 72.8478, label: 'R-12', color: '#3b82f6', status: 'En-Route to Dadar' },
+            { lat: 19.0596, lng: 72.8295, label: 'R-04', color: '#00ff88', status: 'Available' },
+            { lat: 19.0411, lng: 72.8545, label: 'R-09', color: '#f97316', status: 'Dispatched to Dharavi' },
+            { lat: 19.1136, lng: 72.8697, label: 'R-15', color: '#3b82f6', status: 'En-Route to Andheri' },
+        ];
+
+        units.forEach(u => {
+            const marker = L.marker([u.lat, u.lng], { icon: createUnitIcon(u.color, u.label) }).addTo(unitMap);
+            marker.bindPopup(`<div style="font-family:JetBrains Mono,monospace;font-size:11px;color:#00ff88;background:#000;padding:8px;border:1px solid #00ff8840;">
+        <div style="font-weight:bold;margin-bottom:4px;">UNIT ${u.label}</div>
+        <div style="font-size:10px;color:${u.color};">STATUS: ${u.status}</div>
+        <div style="font-size:9px;opacity:0.5;">LAT: ${u.lat.toFixed(4)} LNG: ${u.lng.toFixed(4)}</div>
+    </div>`);
+        });
+
+        // Simulate unit movement
+        setInterval(() => {
+            // Just update KPI and connection status
+            document.getElementById('connection-ts').textContent = `CONNECTION_STABLE  ${new Date().toISOString().split('T')[1].split('.')[0]} UTC`;
+        }, 1000);
+
+        async function loadIncidents() {
+            for (let i = 0; i < 3; i++) {
+                const mock = generateMockIncident();
+                const scored = await validateIncident(mock);
+                incidentStore.unshift({ ...mock, ...scored });
+            }
+            incidentStore = incidentStore.slice(0, 20);
+            renderTable();
+            document.getElementById('kpi-incidents').textContent = incidentStore.length;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('incident-table');
+            tbody.innerHTML = incidentStore.map(inc => {
+                const time = new Date(inc.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const sevClass = severityColor(inc.severity);
+                const sevBg = severityBorder(inc.severity);
+                return `<tr class="hover:bg-primary/5">
+            <td class="py-3 font-mono">#${inc.id.slice(0, 6)}</td>
+            <td class="py-3 uppercase text-primary">${inc.type}</td>
+            <td class="py-3"><span class="px-2 py-0.5 border rounded text-[10px] ${sevBg} ${sevClass}">${inc.severity}</span></td>
+            <td class="py-3">${inc.zone || 'Mumbai'}</td>
+            <td class="py-3">${time}</td>
+            <td class="py-3"><button class="border border-red-500/50 text-red-400 px-2 py-1 text-[10px] rounded hover:bg-red-500/10 transition-colors">DISPATCH</button></td>
+        </tr>`;
+            }).join('');
+        }
+
+        renderHeatmap();
+        loadIncidents();
+        setInterval(() => { loadIncidents(); renderHeatmap(); }, 5000);
+
+        // Fix map rendering after container is ready
+        setTimeout(() => { unitMap.invalidateSize(); }, 200);
+    </script>
+</body>
+
+</html>

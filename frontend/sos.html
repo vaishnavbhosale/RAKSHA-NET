@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SOS Distress Signal — RAKSHA-NET</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { "primary": "#00ff88", "background-dark": "#0a0a0a" },
+                    fontFamily: { "display": ["JetBrains Mono", "monospace"], "sans": ["Inter", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "9999px" },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: #000;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .pulsing-glow {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        @keyframes ping-slow {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        .ping-slow {
+            animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        .recording-pulse {
+            animation: rec-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes rec-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.4s ease-out;
+        }
+    </style>
+</head>
+
+<body class="bg-black text-slate-100 antialiased overflow-x-hidden selection:bg-primary selection:text-black">
+    <div class="relative flex min-h-screen w-full flex-col">
+        <!-- Header -->
+        <header
+            class="fixed top-0 left-0 right-0 flex items-center justify-between border-b border-primary/20 bg-black/80 backdrop-blur-md px-6 py-4 z-50">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary text-2xl">emergency_share</span>
+                    <h2 class="text-primary text-lg font-bold tracking-tighter uppercase">SOS Terminal</h2>
+                </a>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="system-status"
+                    class="text-[10px] tracking-widest flex items-center gap-2 text-primary/60"></span>
+                <a href="index.html"
+                    class="flex items-center justify-center rounded bg-primary/10 p-2 text-primary border border-primary/30">
+                    <span class="material-symbols-outlined">home</span>
+                </a>
+                <button onclick="toggleProfile()"
+                    class="flex items-center justify-center rounded bg-primary/10 p-2 text-primary border border-primary/30 hover:bg-primary/30 transition-colors"
+                    title="Profile">
+                    <span class="material-symbols-outlined">person</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main content: 3 columns -->
+        <div class="flex flex-col lg:flex-row mt-16 min-h-[calc(100vh-64px)]">
+
+            <!-- LEFT: Live Emergency Feed + Network Info -->
+            <aside class="hidden lg:flex w-72 border-r border-primary/20 bg-black flex-col overflow-hidden">
+                <!-- Network Status -->
+                <div class="border-b border-primary/20 p-4 bg-primary/5">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-primary/60 mb-3">NETWORK STATUS
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-[10px]"><span
+                                class="text-primary/50">CONNECTION</span><span class="text-primary">● SECURE</span>
+                        </div>
+                        <div class="flex justify-between text-[10px]"><span
+                                class="text-primary/50">LATENCY</span><span>12ms</span></div>
+                        <div class="flex justify-between text-[10px]"><span
+                                class="text-primary/50">ENCRYPTION</span><span>AES-256-GCM</span></div>
+                        <div class="flex justify-between text-[10px]"><span
+                                class="text-primary/50">RELAY_NODE</span><span>MUM-W-092</span></div>
+                    </div>
+                </div>
+                <!-- Quick Actions -->
+                <div class="border-b border-primary/20 p-4">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-primary/60 mb-3">QUICK ACTIONS
+                    </div>
+                    <div class="space-y-2">
+                        <a href="dashboard.html"
+                            class="flex items-center gap-2 text-xs px-3 py-2 border border-primary/20 hover:bg-primary/10 transition-colors rounded">
+                            <span class="material-symbols-outlined text-primary text-lg">map</span>
+                            <span>OPEN MAP VIEW</span>
+                        </a>
+                        <a href="command.html"
+                            class="flex items-center gap-2 text-xs px-3 py-2 border border-primary/20 hover:bg-primary/10 transition-colors rounded">
+                            <span class="material-symbols-outlined text-primary text-lg">security</span>
+                            <span>COMMAND CENTER</span>
+                        </a>
+                        <a href="heatmap.html"
+                            class="flex items-center gap-2 text-xs px-3 py-2 border border-primary/20 hover:bg-primary/10 transition-colors rounded">
+                            <span class="material-symbols-outlined text-red-400 text-lg">local_fire_department</span>
+                            <span>RISK HEATMAP</span>
+                        </a>
+                    </div>
+                </div>
+                <!-- Live Emergency Feed -->
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <div class="px-4 py-3 border-b border-primary/20 bg-red-500/5">
+                        <div class="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                            <span class="size-2 rounded-full bg-red-500 animate-pulse"></span>
+                            LIVE EMERGENCY FEED
+                        </div>
+                    </div>
+                    <div id="emergency-feed" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+                </div>
+                <!-- Emergency Tips -->
+                <div class="border-t border-primary/20 p-4 bg-primary/5">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-primary/60 mb-2">SAFETY TIPS</div>
+                    <ul class="text-[10px] space-y-1 text-primary/50 leading-relaxed">
+                        <li>• Stay calm & find safe ground</li>
+                        <li>• Share location with contacts</li>
+                        <li>• Keep phone battery conserved</li>
+                        <li>• Follow responder instructions</li>
+                        <li>• Use voice message if injured</li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- CENTER: SOS Form -->
+            <main class="flex-1 flex flex-col items-center justify-start p-4 pt-8 lg:p-8 overflow-y-auto">
+                <div class="w-full max-w-lg">
+                    <!-- SOS Icon -->
+                    <div class="flex flex-col items-center text-center mb-6">
+                        <div class="relative mb-4">
+                            <div id="ping-ring" class="absolute inset-0 rounded-full bg-red-500/20 ping-slow"></div>
+                            <div
+                                class="relative flex h-24 w-24 items-center justify-center rounded-full border-4 border-red-500 bg-black shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+                                <span class="material-symbols-outlined text-red-500 text-4xl"
+                                    style="font-variation-settings:'FILL' 1;">emergency</span>
+                            </div>
+                        </div>
+                        <h1 class="text-2xl font-black text-primary tracking-widest uppercase">Distress Signal</h1>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                            <p class="text-xs text-primary/80 uppercase tracking-widest leading-none" id="ai-status">
+                                READY TO TRANSMIT</p>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <div id="sos-form"
+                        class="bg-background-dark/40 border border-primary/20 rounded-xl p-5 backdrop-blur-sm">
+                        <!-- Incident Type -->
+                        <h3 class="text-xs font-bold text-primary/60 uppercase tracking-widest mb-3">Select Incident
+                            Category</h3>
+                        <div class="grid grid-cols-3 gap-2 mb-6" id="type-buttons">
+                            <button onclick="selectType('FIRE')" data-type="FIRE"
+                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                <span
+                                    class="material-symbols-outlined text-red-500 group-hover:scale-110 text-xl">local_fire_department</span>
+                                <span class="text-xs font-bold uppercase">Fire</span>
+                            </button>
+                            <button onclick="selectType('FLOOD')" data-type="FLOOD"
+                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                <span
+                                    class="material-symbols-outlined text-blue-400 group-hover:scale-110 text-xl">water_damage</span>
+                                <span class="text-xs font-bold uppercase">Flood</span>
+                            </button>
+                            <button onclick="selectType('MEDICAL')" data-type="MEDICAL"
+                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                <span
+                                    class="material-symbols-outlined text-primary group-hover:scale-110 text-xl">medical_services</span>
+                                <span class="text-xs font-bold uppercase">Medical</span>
+                            </button>
+                            <button onclick="selectType('EARTHQUAKE')" data-type="EARTHQUAKE"
+                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                <span
+                                    class="material-symbols-outlined text-yellow-500 group-hover:scale-110 text-xl">earthquake</span>
+                                <span class="text-xs font-bold uppercase">Quake</span>
+                            </button>
+                            <button onclick="selectType('VIOLENCE')" data-type="VIOLENCE"
+                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                <span
+                                    class="material-symbols-outlined text-orange-400 group-hover:scale-110 text-xl">security</span>
+                                <span class="text-xs font-bold uppercase">Danger</span>
+                            </button>
+                            <button onclick="selectType('OTHER')" data-type="OTHER"
+                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                <span
+                                    class="material-symbols-outlined text-slate-400 group-hover:scale-110 text-xl">report_problem</span>
+                                <span class="text-xs font-bold uppercase">Other</span>
+                            </button>
+                        </div>
+
+                        <!-- Location -->
+                        <label class="text-xs font-bold text-primary/60 uppercase tracking-widest block mb-2">Verified
+                            Location</label>
+                        <div class="relative mb-4">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">location_on</span>
+                            <input id="location-input"
+                                class="w-full bg-black border border-primary/30 rounded p-3 pl-10 text-sm text-primary focus:outline-none focus:border-primary"
+                                readonly type="text" value="Detecting GPS..." />
+                        </div>
+
+                        <!-- Description -->
+                        <label class="text-xs font-bold text-primary/60 uppercase tracking-widest block mb-2">Situation
+                            Summary</label>
+                        <textarea id="description-input"
+                            class="w-full bg-black border border-primary/30 rounded p-3 text-sm text-slate-300 focus:outline-none focus:border-primary h-20 resize-none mb-4"
+                            placeholder="Describe the emergency..." maxlength="200"></textarea>
+
+                        <!-- Audio Recording -->
+                        <div class="mb-4 border border-primary/20 rounded p-3 bg-primary/5">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-primary/60 uppercase tracking-widest">Voice
+                                    Message</span>
+                                <span id="rec-timer" class="text-xs font-mono text-red-400 hidden">● REC 00:00</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="rec-btn" onclick="toggleRecording()"
+                                    class="flex-1 flex items-center justify-center gap-2 border border-red-500/50 text-red-400 rounded p-3 hover:bg-red-500/10 transition-all">
+                                    <span class="material-symbols-outlined text-xl" id="rec-icon">mic</span>
+                                    <span id="rec-label" class="text-xs font-bold uppercase">Tap to Record</span>
+                                </button>
+                                <button id="play-btn" onclick="playRecording()"
+                                    class="hidden items-center justify-center gap-1 border border-primary/30 text-primary rounded px-4 hover:bg-primary/10 transition-all">
+                                    <span class="material-symbols-outlined text-xl" id="play-icon">play_arrow</span>
+                                </button>
+                                <button id="delete-btn" onclick="deleteRecording()"
+                                    class="hidden items-center justify-center border border-red-500/30 text-red-400 rounded px-3 hover:bg-red-500/10 transition-all">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                            <div id="audio-wave"
+                                class="hidden mt-2 h-8 bg-black/50 border border-primary/20 rounded overflow-hidden flex items-end gap-[2px] p-1">
+                            </div>
+                            <!-- Hidden audio element for playback -->
+                            <audio id="audio-player" class="hidden"></audio>
+                        </div>
+
+                        <!-- AI Score Preview -->
+                        <div id="score-preview" class="hidden mb-4 border border-primary/20 rounded p-3 bg-primary/5">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span
+                                    class="material-symbols-outlined text-primary text-sm animate-spin">progress_activity</span>
+                                <span class="text-xs uppercase tracking-widest text-primary/60">AI ANALYSIS</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3 text-center">
+                                <div>
+                                    <div id="score-confidence" class="text-xl font-black text-primary">--</div>
+                                    <div class="text-[9px] text-primary/40 uppercase">Confidence</div>
+                                </div>
+                                <div>
+                                    <div id="score-severity" class="text-xl font-black">--</div>
+                                    <div class="text-[9px] text-primary/40 uppercase">Severity</div>
+                                </div>
+                                <div>
+                                    <div id="score-status" class="text-xl font-black text-primary">--</div>
+                                    <div class="text-[9px] text-primary/40 uppercase">Status</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <button id="send-btn" onclick="sendDistress()"
+                            class="w-full bg-red-600 text-white font-black text-base py-4 rounded-lg shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:bg-red-500 active:scale-[0.98] transition-all uppercase tracking-tighter">
+                            SEND DISTRESS SIGNAL
+                        </button>
+                    </div>
+
+                    <!-- Success Message (hidden) -->
+                    <div id="success-msg"
+                        class="hidden mt-4 border border-primary p-6 rounded-lg bg-primary/5 text-center w-full max-w-lg slide-in">
+                        <span class="material-symbols-outlined text-primary text-5xl mb-2"
+                            style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        <h3 class="text-primary text-xl font-bold mb-2 uppercase">Signal Transmitted</h3>
+                        <p class="text-primary/60 text-sm mb-2">Emergency services have been notified. Help will be
+                            dispatched to your location soon.</p>
+                        <p class="text-primary text-xs mb-4 uppercase">STAY CALM — RESPONDERS ARE ON THE WAY</p>
+                        <div class="flex gap-3 justify-center">
+                            <a href="command.html"
+                                class="text-xs text-primary border border-primary/30 px-4 py-2 hover:bg-primary/10 transition-colors inline-block uppercase tracking-widest">VIEW
+                                COMMAND CENTER →</a>
+                            <button onclick="resetForm()"
+                                class="text-xs text-red-400 border border-red-500/30 px-4 py-2 hover:bg-red-500/10 transition-colors inline-block uppercase tracking-widest">SEND
+                                ANOTHER SOS</button>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <footer class="mt-6 mb-4 flex flex-col items-center gap-3">
+                        <div class="flex gap-4">
+                            <div class="flex items-center gap-1"><span
+                                    class="material-symbols-outlined text-[14px] text-primary/50">satellite_alt</span><span
+                                    class="text-[10px] text-primary/50 uppercase">Satellite Linked</span></div>
+                            <div class="flex items-center gap-1"><span
+                                    class="material-symbols-outlined text-[14px] text-primary/50">encrypted</span><span
+                                    class="text-[10px] text-primary/50 uppercase">End-to-End Secure</span></div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-widest text-center px-10">False reports
+                            are subject to penalties. Data is encrypted and logged for verification.</p>
+                    </footer>
+                </div>
+            </main>
+
+            <!-- RIGHT: SOS History Panel -->
+            <aside
+                class="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-primary/20 bg-black flex flex-col overflow-hidden">
+                <div class="flex items-center justify-between px-5 py-3 border-b border-primary/20 bg-primary/5">
+                    <h3 class="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">history</span>
+                        SOS History & Status
+                    </h3>
+                    <span class="text-[10px] text-primary/60 font-mono" id="history-count">0 REPORTS</span>
+                </div>
+                <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <div class="text-center py-12 text-primary/30 text-xs uppercase">
+                        No emergency reports yet.<br />Reports you send will appear here.
+                    </div>
+                </div>
+                <!-- Current Status Summary -->
+                <div class="border-t border-primary/20 p-4 bg-primary/5">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-primary/60 mb-2">CURRENT STATUS
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="border border-primary/10 rounded p-2">
+                            <div id="stat-active" class="text-lg font-black text-red-400">0</div>
+                            <div class="text-[9px] text-primary/40">ACTIVE</div>
+                        </div>
+                        <div class="border border-primary/10 rounded p-2">
+                            <div id="stat-dispatched" class="text-lg font-black text-orange-400">0</div>
+                            <div class="text-[9px] text-primary/40">DISPATCHED</div>
+                        </div>
+                        <div class="border border-primary/10 rounded p-2">
+                            <div id="stat-resolved" class="text-lg font-black text-primary">0</div>
+                            <div class="text-[9px] text-primary/40">RESOLVED</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center"
+        style="background:rgba(0,0,0,0.85)">
+        <div class="bg-black border-2 border-primary/40 p-6 w-80 max-w-[90vw] font-mono">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold uppercase tracking-widest">CITIZEN_PROFILE</h3>
+                <button onclick="toggleProfile()" class="text-primary/60 hover:text-primary"><span
+                        class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="flex items-center gap-4 mb-4 pb-4 border-b border-primary/20">
+                <div
+                    class="size-14 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold">CITIZEN #44892</div>
+                    <div class="text-[10px] text-primary/60">CLEARANCE: TIER-2</div>
+                    <div class="text-[10px] text-primary/60">SECTOR: MUMBAI-WEST</div>
+                </div>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div class="flex justify-between"><span class="text-primary/60">STATUS</span><span
+                        class="text-primary">&#11044; ACTIVE</span></div>
+                <div class="flex justify-between"><span class="text-primary/60">NODE_ID</span><span>MUM-WEST-092</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">LAST_PING</span><span>2s ago</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">ENCRYPTION</span><span>AES-256</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">SOS_COUNT</span><span
+                        id="sos-profile-count">0</span></div>
+            </div>
+            <button onclick="toggleProfile()"
+                class="mt-4 w-full bg-primary/10 border border-primary/30 text-primary py-2 text-xs font-bold uppercase tracking-widest hover:bg-primary/20 transition-colors">CLOSE_TERMINAL</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let selectedType = null;
+        let userLat = 19.0760;
+        let userLng = 72.8777;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioBlob = null;
+        let audioUrl = null;
+        let recInterval = null;
+        let recSeconds = 0;
+        let isPlaying = false;
+        let sosHistory = JSON.parse(localStorage.getItem('raksha_sos_history') || '[]');
+
+        // Profile modal
+        function toggleProfile() {
+            const modal = document.getElementById('profile-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                const h = JSON.parse(localStorage.getItem('raksha_sos_history') || '[]');
+                document.getElementById('sos-profile-count').textContent = h.length;
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // GPS
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; document.getElementById('location-input').value = `${userLat.toFixed(4)}° N, ${userLng.toFixed(4)}° E`; },
+                () => { document.getElementById('location-input').value = `${userLat.toFixed(4)}° N, ${userLng.toFixed(4)}° E (Mumbai Default)`; }
+            );
+        } else { document.getElementById('location-input').value = `${userLat.toFixed(4)}° N, ${userLng.toFixed(4)}° E (Mumbai Default)`; }
+
+        function selectType(type) {
+            selectedType = type;
+            document.querySelectorAll('.type-btn').forEach(btn => { btn.classList.remove('border-primary', 'bg-primary/20'); btn.classList.add('border-primary/30', 'bg-primary/5'); });
+            const sel = document.querySelector(`[data-type="${type}"]`);
+            sel.classList.remove('border-primary/30', 'bg-primary/5');
+            sel.classList.add('border-primary', 'bg-primary/20');
+            previewScore();
+        }
+
+        async function previewScore() {
+            if (!selectedType) return;
+            document.getElementById('score-preview').classList.remove('hidden');
+            const result = await validateIncident({ type: selectedType, reporterCount: 1, source: 'APP', lat: userLat, lng: userLng, description: document.getElementById('description-input').value || 'Emergency via app', timestamp: new Date().toISOString() });
+            document.getElementById('score-confidence').textContent = result.confidenceScore;
+            document.getElementById('score-severity').textContent = result.severity;
+            document.getElementById('score-severity').className = `text-xl font-black ${severityColor(result.severity)}`;
+            document.getElementById('score-status').textContent = result.status;
+        }
+
+        // Audio Recording — FIXED playback using <audio> element
+        async function toggleRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') { stopRecording(); return; }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioUrl = URL.createObjectURL(audioBlob);
+                    stream.getTracks().forEach(t => t.stop());
+                    // Set up the audio player
+                    const player = document.getElementById('audio-player');
+                    player.src = audioUrl;
+                    player.onended = () => {
+                        isPlaying = false;
+                        document.getElementById('play-icon').textContent = 'play_arrow';
+                    };
+                    document.getElementById('play-btn').classList.remove('hidden');
+                    document.getElementById('play-btn').classList.add('flex');
+                    document.getElementById('delete-btn').classList.remove('hidden');
+                    document.getElementById('delete-btn').classList.add('flex');
+                    showWaveform();
+                };
+                mediaRecorder.start();
+                recSeconds = 0;
+                document.getElementById('rec-timer').classList.remove('hidden');
+                document.getElementById('rec-icon').textContent = 'stop';
+                document.getElementById('rec-label').textContent = 'STOP RECORDING';
+                document.getElementById('rec-btn').classList.add('recording-pulse', 'bg-red-500/20');
+                recInterval = setInterval(() => { recSeconds++; document.getElementById('rec-timer').textContent = `● REC ${String(Math.floor(recSeconds / 60)).padStart(2, '0')}:${String(recSeconds % 60).padStart(2, '0')}`; }, 1000);
+            } catch (e) {
+                alert('Microphone access denied. Please allow microphone access for voice messages.');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            clearInterval(recInterval);
+            document.getElementById('rec-icon').textContent = 'mic';
+            document.getElementById('rec-label').textContent = '✓ RECORDED';
+            document.getElementById('rec-btn').classList.remove('recording-pulse', 'bg-red-500/20');
+            document.getElementById('rec-timer').textContent = `SAVED ${String(Math.floor(recSeconds / 60)).padStart(2, '0')}:${String(recSeconds % 60).padStart(2, '0')}`;
+        }
+
+        function playRecording() {
+            const player = document.getElementById('audio-player');
+            if (!player.src) return;
+            if (isPlaying) {
+                player.pause();
+                player.currentTime = 0;
+                isPlaying = false;
+                document.getElementById('play-icon').textContent = 'play_arrow';
+            } else {
+                player.play().catch(err => console.error('Playback error:', err));
+                isPlaying = true;
+                document.getElementById('play-icon').textContent = 'stop';
+            }
+        }
+
+        function deleteRecording() {
+            const player = document.getElementById('audio-player');
+            if (isPlaying) { player.pause(); isPlaying = false; }
+            player.src = '';
+            audioBlob = null; audioUrl = null; audioChunks = [];
+            document.getElementById('play-btn').classList.add('hidden');
+            document.getElementById('play-btn').classList.remove('flex');
+            document.getElementById('delete-btn').classList.add('hidden');
+            document.getElementById('delete-btn').classList.remove('flex');
+            document.getElementById('rec-timer').classList.add('hidden');
+            document.getElementById('rec-label').textContent = 'Tap to Record';
+            document.getElementById('rec-icon').textContent = 'mic';
+            document.getElementById('audio-wave').classList.add('hidden');
+        }
+
+        function showWaveform() {
+            const wave = document.getElementById('audio-wave');
+            wave.classList.remove('hidden');
+            wave.innerHTML = '';
+            for (let i = 0; i < 40; i++) {
+                const bar = document.createElement('div');
+                const h = Math.random() * 100;
+                bar.className = 'flex-1 bg-primary/60 rounded-sm';
+                bar.style.height = `${Math.max(15, h)}%`;
+                wave.appendChild(bar);
+            }
+        }
+
+        async function sendDistress() {
+            if (!selectedType) { alert('SELECT AN INCIDENT TYPE'); return; }
+            const btn = document.getElementById('send-btn');
+            btn.textContent = 'TRANSMITTING...';
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            document.getElementById('ai-status').textContent = 'ANALYZING SIGNAL...';
+
+            const incident = {
+                id: crypto.randomUUID().slice(0, 8).toUpperCase(),
+                type: selectedType,
+                reporterCount: 1,
+                source: audioBlob ? 'VOICE' : 'APP',
+                lat: userLat, lng: userLng,
+                description: document.getElementById('description-input').value || 'Emergency reported via RAKSHA-NET',
+                timestamp: new Date().toISOString(),
+                hasAudio: !!audioBlob
+            };
+
+            const aiResult = await validateIncident(incident);
+            await sendSOS(incident);
+
+            const entry = { ...incident, ...aiResult, status_msg: 'DISPATCHING', created: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) };
+            sosHistory.unshift(entry);
+            localStorage.setItem('raksha_sos_history', JSON.stringify(sosHistory.slice(0, 50)));
+
+            document.getElementById('ai-status').textContent = `VALIDATED — CONFIDENCE: ${aiResult.confidenceScore}%`;
+            document.getElementById('sos-form').classList.add('hidden');
+            document.getElementById('success-msg').classList.remove('hidden');
+            renderHistory();
+        }
+
+        function resetForm() {
+            selectedType = null;
+            document.getElementById('sos-form').classList.remove('hidden');
+            document.getElementById('success-msg').classList.add('hidden');
+            document.getElementById('score-preview').classList.add('hidden');
+            document.getElementById('send-btn').textContent = 'SEND DISTRESS SIGNAL';
+            document.getElementById('send-btn').disabled = false;
+            document.getElementById('send-btn').classList.remove('opacity-50');
+            document.getElementById('description-input').value = '';
+            document.getElementById('ai-status').textContent = 'READY TO TRANSMIT';
+            document.querySelectorAll('.type-btn').forEach(btn => { btn.classList.remove('border-primary', 'bg-primary/20'); btn.classList.add('border-primary/30', 'bg-primary/5'); });
+            deleteRecording();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            if (sosHistory.length === 0) { list.innerHTML = '<div class="text-center py-12 text-primary/30 text-xs uppercase">No emergency reports yet.<br/>Reports you send will appear here.</div>'; return; }
+            document.getElementById('history-count').textContent = `${sosHistory.length} REPORTS`;
+
+            let active = 0, dispatched = 0, resolved = 0;
+            sosHistory.forEach((h, i) => { if (i < 2) active++; else if (i < 5) dispatched++; else resolved++; });
+            document.getElementById('stat-active').textContent = active;
+            document.getElementById('stat-dispatched').textContent = dispatched;
+            document.getElementById('stat-resolved').textContent = resolved;
+
+            const typeIcons = { FIRE: 'local_fire_department', FLOOD: 'water_damage', MEDICAL: 'medical_services', EARTHQUAKE: 'earthquake', VIOLENCE: 'security', OTHER: 'report_problem' };
+            const typeColors = { FIRE: 'text-red-500', FLOOD: 'text-blue-400', MEDICAL: 'text-primary', EARTHQUAKE: 'text-yellow-500', VIOLENCE: 'text-orange-400', OTHER: 'text-slate-400' };
+
+            list.innerHTML = sosHistory.map((h, i) => {
+                const statusColors = i < 2 ? 'border-red-500/30 text-red-400' : i < 5 ? 'border-orange-400/30 text-orange-400' : 'border-primary/30 text-primary';
+                const statusLabel = i < 2 ? 'ACTIVE' : i < 5 ? 'DISPATCHED' : 'RESOLVED';
+                return `<div class="border border-primary/10 rounded p-3 bg-primary/5 hover:bg-primary/10 transition-colors slide-in">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined ${typeColors[h.type] || 'text-primary'} text-lg">${typeIcons[h.type] || 'warning'}</span>
+                    <span class="text-xs font-bold uppercase">${h.type}</span>
+                    ${h.hasAudio ? '<span class="material-symbols-outlined text-red-400 text-sm">mic</span>' : ''}
+                </div>
+                <span class="text-[10px] border ${statusColors} px-2 py-0.5 rounded uppercase font-bold">${statusLabel}</span>
+            </div>
+            <div class="flex justify-between text-[10px] text-primary/50">
+                <span>#${h.id || '---'}</span>
+                <span>CONF: ${h.confidenceScore || '--'}%</span>
+                <span>${h.created || '--'}</span>
+            </div>
+        </div>`;
+            }).join('');
+        }
+
+        // Live emergency feed for left panel
+        const FEED_EVENTS = [
+            { type: 'CRITICAL', icon: 'local_fire_department', msg: 'Fire reported in Dharavi Block D', zone: 'DHARAVI', time: '2m' },
+            { type: 'WARNING', icon: 'water_damage', msg: 'Water level rising at Kurla bridge', zone: 'KURLA', time: '8m' },
+            { type: 'INFO', icon: 'check_circle', msg: 'Medical team deployed to Andheri', zone: 'ANDHERI', time: '12m' },
+            { type: 'CRITICAL', icon: 'earthquake', msg: 'Tremor detected 2.1M magnitude', zone: 'DADAR', time: '15m' },
+            { type: 'WARNING', icon: 'security', msg: 'Crowd surge near Bandra station', zone: 'BANDRA', time: '22m' },
+            { type: 'INFO', icon: 'local_hospital', msg: 'Ambulance R-09 reached Dharavi', zone: 'DHARAVI', time: '25m' },
+        ];
+
+        function renderEmergencyFeed() {
+            const feed = document.getElementById('emergency-feed');
+            if (!feed) return;
+            feed.innerHTML = FEED_EVENTS.map(e => {
+                const color = e.type === 'CRITICAL' ? 'border-l-red-500' : e.type === 'WARNING' ? 'border-l-orange-400' : 'border-l-primary';
+                const textColor = e.type === 'CRITICAL' ? 'text-red-400' : e.type === 'WARNING' ? 'text-orange-400' : 'text-primary/70';
+                return `<div class="border-l-2 ${color} pl-3 py-1">
+            <div class="flex items-center gap-1.5 mb-0.5">
+                <span class="material-symbols-outlined ${textColor} text-sm">${e.icon}</span>
+                <span class="text-[10px] font-bold ${textColor}">${e.type}</span>
+                <span class="text-[9px] text-primary/30 ml-auto">${e.time} ago</span>
+            </div>
+            <p class="text-[10px] text-primary/60 leading-relaxed">${e.msg}</p>
+            <span class="text-[9px] text-primary/30">${e.zone}</span>
+        </div>`;
+            }).join('');
+        }
+
+        renderHistory();
+        renderEmergencyFeed();
+        updateStatus('system-status');
+    </script>
+</body>
+
+</html>

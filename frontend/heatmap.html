@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Risk Heatmap — RAKSHA-NET</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { "primary": "#00ff88", "background-dark": "#050a08" },
+                    fontFamily: { "display": ["Inter", "sans-serif"], "mono": ["JetBrains Mono", "monospace"] },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "9999px" },
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #00ff8833;
+            border-radius: 2px;
+        }
+
+        .leaflet-container {
+            background: #050a08 !important;
+        }
+
+        .leaflet-tile {
+            filter: invert(1) hue-rotate(180deg) brightness(0.6) contrast(1.4) saturate(0.3);
+        }
+
+        .leaflet-control-zoom a {
+            background: #000 !important;
+            color: #00ff88 !important;
+            border-color: #00ff8840 !important;
+        }
+
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+
+        .filter-dropdown {
+            position: relative;
+        }
+
+        .filter-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 9999;
+            min-width: 180px;
+        }
+
+        .filter-dropdown.open .filter-menu {
+            display: block;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-dark font-display text-primary antialiased selection:bg-primary selection:text-background-dark">
+    <div class="relative flex min-h-screen flex-col overflow-x-hidden">
+        <!-- Header -->
+        <header
+            class="flex items-center justify-between border-b border-primary/20 bg-background-dark/80 backdrop-blur-md px-6 py-4 sticky top-0 z-50">
+            <div class="flex items-center gap-4">
+                <a href="index.html"><span class="material-symbols-outlined text-primary text-3xl">grid_view</span></a>
+                <div>
+                    <h2 class="text-primary font-mono text-xl font-bold tracking-tighter uppercase">RAKSHA-NET LIVE OPS
+                    </h2>
+                    <p class="text-primary/60 font-mono text-[10px] uppercase">Risk Heatmap // Mumbai District Analysis
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="hidden md:flex items-center gap-4">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[10px] font-mono opacity-50 uppercase tracking-widest">System_Status</span>
+                        <span class="text-xs font-mono">NOMINAL // <span id="hm-latency">18</span>ms LATENCY</span>
+                    </div>
+                    <div class="h-8 w-px bg-primary/20"></div>
+                </div>
+                <div class="flex gap-2">
+                    <a href="command.html"
+                        class="flex size-10 items-center justify-center rounded border border-primary/30 hover:bg-primary/10 transition-colors"
+                        title="Command Center">
+                        <span class="material-symbols-outlined text-xl">security</span>
+                    </a>
+                    <a href="sos.html"
+                        class="flex size-10 items-center justify-center rounded border border-red-500/30 hover:bg-red-500/10 transition-colors"
+                        title="SOS">
+                        <span class="material-symbols-outlined text-xl text-red-500">emergency</span>
+                    </a>
+                    <button onclick="toggleProfile()"
+                        class="size-10 rounded border border-primary bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors"
+                        title="Profile">
+                        <span class="material-symbols-outlined">person</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filters Bar -->
+        <div class="flex flex-col px-6 py-3 border-b border-primary/20 bg-background-dark/40 relative z-[9998]">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="font-mono text-[10px] opacity-60 uppercase mr-2">Filters:</span>
+
+                <!-- Time Filter -->
+                <div class="filter-dropdown" id="filter-time">
+                    <button onclick="toggleFilter('filter-time')"
+                        class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary text-[11px] font-mono hover:bg-primary/10 transition-all uppercase">
+                        <span id="filter-time-label">Time: 24H</span>
+                        <span class="material-symbols-outlined text-sm">expand_more</span>
+                    </button>
+                    <div class="filter-menu mt-1 bg-black border border-primary/40 rounded overflow-hidden">
+                        <button onclick="setFilter('filter-time','1H')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">1
+                            HOUR</button>
+                        <button onclick="setFilter('filter-time','6H')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">6
+                            HOURS</button>
+                        <button onclick="setFilter('filter-time','24H')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">24
+                            HOURS</button>
+                        <button onclick="setFilter('filter-time','7D')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">7
+                            DAYS</button>
+                        <button onclick="setFilter('filter-time','30D')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">30
+                            DAYS</button>
+                    </div>
+                </div>
+
+                <!-- Type Filter -->
+                <div class="filter-dropdown" id="filter-type">
+                    <button onclick="toggleFilter('filter-type')"
+                        class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary text-[11px] font-mono hover:bg-primary/10 transition-all uppercase">
+                        <span id="filter-type-label">Type: All</span>
+                        <span class="material-symbols-outlined text-sm">expand_more</span>
+                    </button>
+                    <div class="filter-menu mt-1 bg-black border border-primary/40 rounded overflow-hidden">
+                        <button onclick="setFilter('filter-type','All')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">ALL
+                            INCIDENTS</button>
+                        <button onclick="setFilter('filter-type','Fire')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">🔥
+                            FIRE</button>
+                        <button onclick="setFilter('filter-type','Flood')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">🌊
+                            FLOOD</button>
+                        <button onclick="setFilter('filter-type','Medical')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">🏥
+                            MEDICAL</button>
+                        <button onclick="setFilter('filter-type','Earthquake')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">🌍
+                            EARTHQUAKE</button>
+                        <button onclick="setFilter('filter-type','Violence')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">⚠️
+                            VIOLENCE</button>
+                    </div>
+                </div>
+
+                <!-- Severity Filter -->
+                <div class="filter-dropdown" id="filter-severity">
+                    <button onclick="toggleFilter('filter-severity')"
+                        class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary text-[11px] font-mono hover:bg-primary/10 transition-all uppercase">
+                        <span id="filter-severity-label">Severity: All</span>
+                        <span class="material-symbols-outlined text-sm">expand_more</span>
+                    </button>
+                    <div class="filter-menu mt-1 bg-black border border-primary/40 rounded overflow-hidden">
+                        <button onclick="setFilter('filter-severity','All')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left hover:bg-primary/20 transition-colors">ALL</button>
+                        <button onclick="setFilter('filter-severity','Critical')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left text-red-400 hover:bg-primary/20 transition-colors">●
+                            CRITICAL (&gt;80)</button>
+                        <button onclick="setFilter('filter-severity','High')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left text-orange-400 hover:bg-primary/20 transition-colors">●
+                            HIGH (50-80)</button>
+                        <button onclick="setFilter('filter-severity','Medium')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left text-yellow-400 hover:bg-primary/20 transition-colors">●
+                            MEDIUM (25-50)</button>
+                        <button onclick="setFilter('filter-severity','Low')"
+                            class="block w-full px-4 py-2 text-[11px] font-mono text-left text-primary hover:bg-primary/20 transition-colors">●
+                            LOW (&lt;25)</button>
+                    </div>
+                </div>
+
+                <div class="ml-auto flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="size-2 rounded-full bg-primary shadow-[0_0_8px_#00ff88]"></div>
+                        <span class="font-mono text-[10px] uppercase">Live_Stream</span>
+                    </div>
+                    <button onclick="exportData()"
+                        class="px-4 py-1.5 rounded border border-primary/30 text-[11px] font-mono hover:bg-primary/10 transition-all uppercase flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">download</span> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="flex flex-1 flex-col lg:flex-row h-[calc(100vh-140px)] overflow-hidden">
+            <!-- Map Section -->
+            <section class="w-full lg:w-[60%] relative border-r border-primary/20 flex flex-col">
+                <div id="heatmap" class="flex-1 w-full z-0"></div>
+                <!-- Live Risk Feed overlay -->
+                <div class="absolute top-4 left-4 z-[1000] w-72">
+                    <div class="bg-black/90 border border-primary/30 p-3 backdrop-blur-sm">
+                        <div class="text-[10px] font-bold mb-2 border-b border-primary/20 pb-1">LIVE RISK FEED</div>
+                        <div id="risk-feed" class="space-y-2 max-h-36 overflow-y-auto custom-scrollbar"></div>
+                    </div>
+                </div>
+                <!-- Legend -->
+                <div
+                    class="absolute bottom-4 left-4 z-[1000] flex flex-col gap-2 bg-black/80 p-3 border border-primary/20 backdrop-blur-sm">
+                    <div class="flex items-center gap-2">
+                        <div class="size-3 bg-red-500"></div><span class="font-mono text-[10px]">HIGH RISK</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="size-3 bg-yellow-500"></div><span class="font-mono text-[10px]">MODERATE</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="size-3 bg-primary"></div><span class="font-mono text-[10px]">SECURE</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel -->
+            <section class="w-full lg:w-[40%] bg-background-dark flex flex-col h-full">
+                <div class="p-5 border-b border-primary/20">
+                    <div class="flex items-end justify-between">
+                        <h3 class="font-mono text-lg font-bold tracking-tighter uppercase flex items-center gap-2">
+                            <span class="material-symbols-outlined text-red-400">trending_up</span>
+                            TOP RISK ZONES
+                        </h3>
+                        <span class="font-mono text-[10px] opacity-60">SORT: BY_RISK_SCORE</span>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar px-5 py-3">
+                    <div
+                        class="font-mono text-[10px] grid grid-cols-5 gap-4 pb-2 border-b border-primary/20 opacity-60 uppercase">
+                        <span>Rank</span><span>Zone</span><span>Incidents</span><span>Trend</span><span
+                            class="text-right">Score</span>
+                    </div>
+                    <div id="zone-list" class="flex flex-col divide-y divide-primary/10"></div>
+                </div>
+                <div class="p-4 bg-primary/5 border-t border-primary/20">
+                    <div class="flex items-center justify-between font-mono text-[10px] opacity-60">
+                        <span>MONITORED: <span id="total-monitored">14,802</span></span>
+                        <span class="flex items-center gap-1"><span
+                                class="size-1.5 rounded-full bg-primary animate-pulse"></span> STREAMING</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer
+            class="border-t border-primary/20 px-6 py-2 bg-background-dark flex justify-between items-center text-[10px] font-mono tracking-widest uppercase">
+            <div class="flex gap-4">
+                <span class="text-primary/60">SERVER: APAC-SOUTH-01</span>
+                <span class="text-red-400" id="critical-count">CRITICAL: 02</span>
+            </div>
+            <div class="flex gap-4">
+                <span>BUFFER: 98%</span>
+                <span>LOSS: 0.00%</span>
+                <span class="animate-pulse">●_SYNCING</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center"
+        style="background:rgba(0,0,0,0.85)">
+        <div class="bg-black border-2 border-primary/40 p-6 w-80 max-w-[90vw] font-mono">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold uppercase tracking-widest">CITIZEN_PROFILE</h3>
+                <button onclick="toggleProfile()" class="text-primary/60 hover:text-primary"><span
+                        class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="flex items-center gap-4 mb-4 pb-4 border-b border-primary/20">
+                <div
+                    class="size-14 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">person</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold">CITIZEN #44892</div>
+                    <div class="text-[10px] text-primary/60">CLEARANCE: TIER-2</div>
+                    <div class="text-[10px] text-primary/60">SECTOR: MUMBAI-WEST</div>
+                </div>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div class="flex justify-between"><span class="text-primary/60">STATUS</span><span
+                        class="text-primary">● ACTIVE</span></div>
+                <div class="flex justify-between"><span class="text-primary/60">NODE_ID</span><span>MUM-WEST-092</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">LAST_PING</span><span>2s ago</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">ENCRYPTION</span><span>AES-256</span>
+                </div>
+                <div class="flex justify-between"><span class="text-primary/60">SOS_COUNT</span><span
+                        id="profile-sos-count-hm">0</span></div>
+            </div>
+            <button onclick="toggleProfile()"
+                class="mt-4 w-full bg-primary/10 border border-primary/30 text-primary py-2 text-xs font-bold uppercase tracking-widest hover:bg-primary/20 transition-colors">CLOSE_TERMINAL</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        function toggleProfile() {
+            const modal = document.getElementById('profile-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                const history = JSON.parse(localStorage.getItem('raksha_sos_history') || '[]');
+                document.getElementById('profile-sos-count-hm').textContent = history.length;
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+        // Zone data
+        const ZONES = [
+            { name: 'ZONE-DHARAVI', district: 'Dharavi Slum Area', incidents: 442, risk: 98.4, lat: 19.0411, lng: 72.8545, trend: [35, 10, 25, 5, 30, 10], types: ['Fire', 'Medical'] },
+            { name: 'ZONE-KURLA', district: 'Central Hub', incidents: 318, risk: 91.0, lat: 19.0728, lng: 72.8826, trend: [20, 35, 5, 25, 15], types: ['Flood', 'Violence'] },
+            { name: 'ZONE-ANDHERI', district: 'Western Suburbs', incidents: 152, risk: 64.2, lat: 19.1136, lng: 72.8697, trend: [30, 25, 20, 15, 25], types: ['Medical', 'Fire'] },
+            { name: 'ZONE-BANDRA', district: 'Coastal District', incidents: 98, risk: 42.8, lat: 19.0596, lng: 72.8295, trend: [10, 20, 10, 30, 10], types: ['Flood'] },
+            { name: 'ZONE-DADAR', district: 'Central Mumbai', incidents: 72, risk: 28.1, lat: 19.0178, lng: 72.8478, trend: [5, 10, 15, 10, 20], types: ['Earthquake'] },
+            { name: 'ZONE-COLABA', district: 'South Mumbai', incidents: 45, risk: 12.4, lat: 18.9067, lng: 72.8147, trend: [5, 10, 5, 8, 10], types: ['Medical'] },
+            { name: 'ZONE-BORIVALI', district: 'North Suburbs', incidents: 12, risk: 8.1, lat: 19.2307, lng: 72.8567, trend: [2, 5, 3, 4, 6], types: ['Fire'] },
+        ];
+
+        // Current filter state
+        let activeFilters = { time: '24H', type: 'All', severity: 'All' };
+
+        // Filter logic
+        function toggleFilter(id) {
+            document.querySelectorAll('.filter-dropdown').forEach(d => { if (d.id !== id) d.classList.remove('open'); });
+            document.getElementById(id).classList.toggle('open');
+        }
+
+        function setFilter(filterId, value) {
+            const type = filterId.replace('filter-', '');
+            activeFilters[type] = value;
+            document.getElementById(filterId + '-label').textContent = `${type.charAt(0).toUpperCase() + type.slice(1)}: ${value}`;
+            document.getElementById(filterId).classList.remove('open');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = [...ZONES];
+            if (activeFilters.severity !== 'All') {
+                filtered = filtered.filter(z => {
+                    if (activeFilters.severity === 'Critical') return z.risk >= 80;
+                    if (activeFilters.severity === 'High') return z.risk >= 50 && z.risk < 80;
+                    if (activeFilters.severity === 'Medium') return z.risk >= 25 && z.risk < 50;
+                    if (activeFilters.severity === 'Low') return z.risk < 25;
+                    return true;
+                });
+            }
+            if (activeFilters.type !== 'All') {
+                filtered = filtered.filter(z => z.types.some(t => t.toLowerCase() === activeFilters.type.toLowerCase()));
+            }
+            renderZones(filtered);
+            renderMapMarkers(filtered);
+        }
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', e => { if (!e.target.closest('.filter-dropdown')) document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open')); });
+
+        function riskColor(risk) {
+            if (risk >= 80) return 'text-red-500';
+            if (risk >= 50) return 'text-yellow-400';
+            if (risk >= 25) return 'text-orange-400';
+            return 'text-primary';
+        }
+
+        function trendSVG(trend) {
+            const maxV = Math.max(...trend);
+            const points = trend.map((v, i) => `${(i / (trend.length - 1)) * 100},${40 - (v / maxV) * 35}`).join(' ');
+            const color = trend[trend.length - 1] > trend[0] ? '#ef4444' : trend[trend.length - 1] < trend[0] ? '#00ff88' : '#eab308';
+            return `<svg class="w-14 h-6" viewBox="0 0 100 40" preserveAspectRatio="none"><polyline fill="none" points="${points}" stroke="${color}" stroke-width="2"/></svg>`;
+        }
+
+        function renderZones(zones) {
+            const list = document.getElementById('zone-list');
+            if (zones.length === 0) {
+                list.innerHTML = '<div class="py-8 text-center text-primary/30 text-xs uppercase">No zones match filters</div>';
+                return;
+            }
+            list.innerHTML = zones.map((z, i) => {
+                return `<div class="py-3 flex items-center justify-between group cursor-pointer hover:bg-primary/5 -mx-2 px-2 transition-colors" onclick="flyToZone(${z.lat},${z.lng})">
+            <div class="flex items-center gap-3">
+                <span class="font-mono text-lg opacity-40">${String(i + 1).padStart(2, '0')}</span>
+                <div>
+                    <h4 class="font-mono text-sm font-bold uppercase tracking-tight">${z.name}</h4>
+                    <p class="font-mono text-[10px] opacity-60 uppercase">${z.district}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <span class="font-mono text-sm font-bold">${z.incidents.toLocaleString()}</span>
+                <div class="w-14 h-6">${trendSVG(z.trend)}</div>
+                <span class="font-mono text-sm font-bold ${riskColor(z.risk)} w-12 text-right">${z.risk.toFixed(1)}</span>
+            </div>
+        </div>`;
+            }).join('');
+        }
+
+        // Leaflet map
+        const heatmap = L.map('heatmap', { zoomControl: false }).setView([19.0760, 72.8777], 12);
+        L.control.zoom({ position: 'bottomright' }).addTo(heatmap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(heatmap);
+
+        let zoneCircles = [];
+        function renderMapMarkers(zones) {
+            zoneCircles.forEach(c => heatmap.removeLayer(c));
+            zoneCircles = [];
+            zones.forEach(z => {
+                const color = z.risk >= 80 ? '#ef4444' : z.risk >= 50 ? '#eab308' : z.risk >= 25 ? '#f97316' : '#00ff88';
+                const radius = Math.max(400, z.risk * 12);
+                const circle = L.circle([z.lat, z.lng], {
+                    radius, color, fillColor: color, fillOpacity: 0.25, weight: 2, opacity: 0.6
+                }).addTo(heatmap);
+                circle.bindPopup(`<div style="font-family:JetBrains Mono,monospace;font-size:11px;color:#00ff88;background:#000;padding:8px;border:1px solid #00ff8840;">
+            <div style="font-weight:bold;margin-bottom:4px;">${z.name}</div>
+            <div style="font-size:10px;opacity:0.7;">Risk: ${z.risk.toFixed(1)} | Incidents: ${z.incidents}</div>
+            <div style="font-size:9px;opacity:0.5;">${z.district}</div>
+        </div>`);
+                zoneCircles.push(circle);
+            });
+        }
+
+        function flyToZone(lat, lng) { heatmap.flyTo([lat, lng], 14, { duration: 1 }); }
+
+        // Risk feed
+        const RISK_ALERTS = [
+            { sev: 'SEV-01', type: 'CRITICAL', msg: 'ZONE-DHARAVI: Fire spreading near residential block', time: '02m ago' },
+            { sev: 'SEV-03', type: 'WARNING', msg: 'ZONE-KURLA: Traffic spike near station', time: '14m ago' },
+            { sev: 'SEV-02', type: 'CRITICAL', msg: 'ZONE-ANDHERI: Medical emergency cluster', time: '6m ago' },
+            { sev: 'SEV-04', type: 'INFO', msg: 'ZONE-COLABA: Patrol units all clear', time: '22m ago' },
+            { sev: 'SEV-01', type: 'CRITICAL', msg: 'ZONE-DADAR: Earthquake tremors detected 2.1M', time: '8m ago' },
+        ];
+
+        function renderRiskFeed() {
+            document.getElementById('risk-feed').innerHTML = RISK_ALERTS.map(a => {
+                const color = a.type === 'CRITICAL' ? 'border-red-500 text-red-400' : a.type === 'WARNING' ? 'border-orange-400 text-orange-400' : 'border-primary/30 text-primary/60';
+                return `<div class="border-l-2 ${color} pl-2">
+            <div class="flex justify-between"><span class="text-[10px] font-bold">${a.sev} ${a.type}</span><span class="text-[10px] text-primary/40">${a.time}</span></div>
+            <p class="text-[10px] text-primary/70">${a.msg}</p>
+        </div>`;
+            }).join('');
+        }
+
+        function exportData() {
+            const csv = 'Zone,District,Incidents,Risk_Score\n' + ZONES.map(z => `${z.name},${z.district},${z.incidents},${z.risk}`).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'raksha_net_zones.csv'; a.click();
+        }
+
+        // Initial render
+        renderZones(ZONES);
+        renderMapMarkers(ZONES);
+        renderRiskFeed();
+
+        document.getElementById('critical-count').textContent = `CRITICAL: ${String(ZONES.filter(z => z.risk >= 80).length).padStart(2, '0')}`;
+
+        // Auto-update incidents
+        setInterval(() => {
+            ZONES.forEach(z => { z.incidents += Math.floor(Math.random() * 5); });
+            applyFilters();
+            document.getElementById('total-monitored').textContent = ZONES.reduce((s, z) => s + z.incidents, 0).toLocaleString();
+        }, 8000);
+    </script>
+</body>
+
+</html>
