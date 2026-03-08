@@ -1,8 +1,6 @@
-package com.RAKSHA.NET.alert;
+package com.RAKSHA.NET.service;
 
-package com.RAKSHA.NET.AlertService;
-
-import com.RAKSHA.NET.model.AlertEntity;
+import com.RAKSHA.NET.model.Alert;
 import com.RAKSHA.NET.repository.AlertRepository;
 import org.springframework.stereotype.Service;
 
@@ -18,23 +16,14 @@ public class AlertService {
         this.alertRepository = alertRepository;
     }
 
-    public AlertEntity createAlert(AlertEntity alert) {
+    public Alert createAlert(Alert alert) {
 
         alert.setCreatedAt(LocalDateTime.now());
 
         return alertRepository.save(alert);
     }
 
-    public List<AlertEntity> getAllAlerts() {
+    public List<Alert> getAllAlerts() {
         return alertRepository.findAll();
-    }
-
-    public AlertEntity getAlertById(Long id) {
-        return alertRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Alert not found"));
-    }
-
-    public void deleteAlert(Long id) {
-        alertRepository.deleteById(id);
     }
 }

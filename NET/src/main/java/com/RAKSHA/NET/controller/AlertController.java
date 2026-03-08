@@ -1,8 +1,7 @@
 package com.RAKSHA.NET.controller;
 
-import com.RAKSHA.NET.model.AlertEntity;
+import com.RAKSHA.NET.model.Alert;
 import com.RAKSHA.NET.service.AlertService;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,27 +16,13 @@ public class AlertController {
         this.alertService = alertService;
     }
 
-    // Create alert
     @PostMapping
-    public Alertentity createAlert(@RequestBody AlertEntity alertentity) {
+    public Alert createAlert(@RequestBody Alert alert) {
         return alertService.createAlert(alert);
     }
 
-    // Get all alerts
     @GetMapping
-    public List<AlertEntity> getAllAlerts() {
+    public List<Alert> getAlerts() {
         return alertService.getAllAlerts();
-    }
-
-    // Get alert by id
-    @GetMapping("/{id}")
-    public AlertEntity getAlert(@PathVariable Long id) {
-        return alertService.getAlertById(id);
-    }
-
-    // Delete alert
-    @DeleteMapping("/{id}")
-    public void deleteAlert(@PathVariable Long id) {
-        alertService.deleteAlert(id);
     }
 }
