@@ -1,0 +1,39 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# RAKSHA-NET – application.properties.example
+#
+# Copy this file to src/main/resources/application-local.properties (or set the
+# environment variables directly) and fill in your credentials.
+# NEVER commit real secrets to version control.
+# ──────────────────────────────────────────────────────────────────────────────
+
+spring.application.name=RAKSHA-NET
+
+# ── Mail / SMTP ───────────────────────────────────────────────────────────────
+# Environment variables (recommended):
+#   MAIL_HOST       – SMTP host            (default: smtp.gmail.com)
+#   MAIL_PORT       – SMTP port            (default: 587)
+#   MAIL_USERNAME   – SMTP login address
+#   MAIL_PASSWORD   – SMTP password / app-password
+
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=YOUR_GMAIL_ADDRESS@gmail.com
+spring.mail.password=YOUR_APP_PASSWORD
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# ── Alert recipient ───────────────────────────────────────────────────────────
+# Environment variable: ALERT_RECIPIENT_EMAIL
+alert.recipient-email=admin@example.com
+
+# ── Twilio SMS ────────────────────────────────────────────────────────────────
+# Environment variables (recommended):
+#   TWILIO_ACCOUNT_SID   – found at https://console.twilio.com
+#   TWILIO_AUTH_TOKEN    – found at https://console.twilio.com
+#   TWILIO_FROM_NUMBER   – your Twilio phone number, e.g. +1415XXXXXXX
+#   TWILIO_TO_NUMBER     – destination phone number, e.g. +919XXXXXXXXX
+
+twilio.account-sid=ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+twilio.auth-token=your_auth_token_here
+twilio.from-number=+1415XXXXXXX
+twilio.to-number=+91XXXXXXXXXX
