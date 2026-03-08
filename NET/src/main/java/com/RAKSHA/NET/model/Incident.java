@@ -1,7 +1,11 @@
 package com.RAKSHA.NET.model;
 
+import com.RAKSHA.NET.enums.IncidentStatus;
+import com.RAKSHA.NET.enums.IncidentTypes;
 import jakarta.persistence.*;
 import lombok.*;
+
+import javax.print.attribute.standard.Severity;
 
 @Entity
 @Getter
@@ -11,15 +15,18 @@ import lombok.*;
 public class Incident {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     private Long id;
 
     private double latitude;
     private double longitude;
 
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private IncidentTypes type;
 
-    private String severity;
+    @Enumerated(EnumType.STRING)
+    private Severity severity;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private IncidentStatus status;
 }
