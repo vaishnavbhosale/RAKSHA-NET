@@ -198,9 +198,9 @@ Because the AI logic is completely isolated as a **FastAPI microservice**, the a
 
 | Member | Role |
 |---|---|
-| **Member 1** | Frontend Development (UI/UX + JavaScript) |
-| **Member 2** | AI Service (Python + Scoring Logic) |
-| **Member 3** | Backend (Spring Boot + SMS/Email) |
+| **Meghna Reddy** | Frontend Development (UI/UX + JavaScript) |
+| **Dhanesh Chaudhari** | AI Service (Python + Scoring Logic) |
+| **Vaishnav Bhosale** | Backend (Spring Boot + SMS/Email) |
 
 ---
 
