@@ -186,7 +186,15 @@ TWILIO_TO_NUMBER=+919876543210
 
 ---
 
-## 👥 Team
+## � Future Scope: AI Model Integration
+
+Currently, the `ai-service` uses a **Python Rule-Based Engine** (`scorer.py`) to calculate incident confidence and severity. 
+
+Because the AI logic is completely isolated as a **FastAPI microservice**, the architecture is explicitly designed to be future-proof. Without changing a single line of code in the Spring Boot backend or the Frontend, the rule-based engine can be seamlessly swapped with a **trained Machine Learning model** (e.g., Random Forest or a custom neural network) to analyze historical incident data and predict severity based on real-world patterns.
+
+---
+
+## �👥 Team
 
 | Member | Role |
 |---|---|
