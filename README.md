@@ -17,7 +17,7 @@ RAKSHA-NET is a real-time emergency response platform that enables **citizens to
               ▼                           ▼
 ┌─────────────────────┐     ┌─────────────────────────────────┐
 │  AI SERVICE (8001)  │     │   SPRING BOOT BACKEND (8080)    │
-│  FastAPI + Gemini   │     │  REST APIs + Twilio + SMTP      │
+│  FastAPI + Python   │     │  REST APIs + Twilio + SMTP      │
 │  Incident Scoring   │     │  SOS CRUD + Dispatch + Alerts   │
 │  Risk Analysis      │     │  Email/SMS Broadcasting         │
 └─────────────────────┘     └─────────────────────────────────┘
@@ -97,9 +97,6 @@ python -m http.server 8002
 cd ai-service
 pip install -r requirements.txt
 
-# Configure .env with your Gemini API key
-echo "GEMINI_API_KEY=your-key-here" > .env
-
 python main.py
 # Runs on http://localhost:8001
 ```
@@ -117,11 +114,6 @@ cd NET
 ---
 
 ## 🔑 Environment Variables
-
-### AI Service (`ai-service/.env`)
-```bash
-GEMINI_API_KEY=your-google-gemini-api-key
-```
 
 ### Spring Boot Backend
 ```bash
@@ -185,7 +177,7 @@ TWILIO_TO_NUMBER=+919876543210
 | Layer | Technologies |
 |---|---|
 | **Frontend** | HTML5, Tailwind CSS, Vanilla JavaScript, Leaflet.js |
-| **AI Service** | Python, FastAPI, Google Gemini API |
+| **AI Service** | Python, FastAPI |
 | **Backend** | Java 17, Spring Boot 4, Maven |
 | **SMS** | Twilio API |
 | **Email** | Spring Mail (SMTP / Gmail) |
@@ -199,7 +191,7 @@ TWILIO_TO_NUMBER=+919876543210
 | Member | Role |
 |---|---|
 | **Member 1** | Frontend Development (UI/UX + JavaScript) |
-| **Member 2** | AI Service (Gemini Integration + Scoring) |
+| **Member 2** | AI Service (Python + Scoring Logic) |
 | **Member 3** | Backend (Spring Boot + SMS/Email) |
 
 ---
