@@ -5,6 +5,7 @@ import com.RAKSHA.NET.dto.SosRequest;
 import com.RAKSHA.NET.enums.IncidentStatus;
 import com.RAKSHA.NET.model.Incident;
 import com.RAKSHA.NET.service.IncidentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,4 +51,5 @@ public class IncidentController {
                                                  @RequestParam double radius) {
         return ResponseEntity.ok(incidentService.getNearby(lat, lng, radius));
     }
+    
 }

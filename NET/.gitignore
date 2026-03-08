@@ -42,3 +42,12 @@ build/
 
 # OS files
 .DS_Store
+
+# Secret / local override files – NEVER commit these
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+*-secret.properties
+*-secret.yml
