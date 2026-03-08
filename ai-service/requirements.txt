@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+requests
+faker
+python-dotenv
+pydantic
