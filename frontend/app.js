@@ -211,6 +211,10 @@ const ALERT_TEMPLATES = {
         subject: 'CYCLONE WARNING — Seek Shelter Immediately',
         body: 'CYCLONE APPROACHING {zone}. Wind speeds exceeding 120 km/h expected. Move to reinforced shelters. Secure loose objects. Stock emergency supplies. Helpline: 112.',
     },
+    OTHER: {
+        subject: 'GENERAL EMERGENCY — Public Advisory',
+        body: 'EMERGENCY ALERT registered for {zone}. Authorities are investigating the situation. Please remain calm, stay alert, and await further official instructions. Emergency: 112.',
+    },
 };
 
 // ── Multi-Channel Broadcast Simulator ────────────────────────
@@ -247,7 +251,7 @@ const TRANSLATIONS = {
         sos_title: 'SOS EMERGENCY TERMINAL',
         sos_subtitle: 'DISTRESS SIGNAL NETWORK // PRIORITY CHANNEL',
         select_emergency: 'SELECT EMERGENCY TYPE',
-        fire: 'FIRE', flood: 'FLOOD', medical: 'MEDICAL', earthquake: 'EARTHQUAKE', violence: 'VIOLENCE', other: 'OTHER',
+        fire: 'FIRE', flood: 'FLOOD', medical: 'MEDICAL', earthquake: 'EARTHQUAKE', security: 'SECURITY', cyclone: 'CYCLONE', other: 'OTHER',
         send_sos: 'TRANSMIT DISTRESS SIGNAL',
         signal_transmitted: 'SIGNAL TRANSMITTED — HELP IS ON THE WAY',
         recording: 'RECORDING AUDIO MESSAGE',
@@ -262,7 +266,7 @@ const TRANSLATIONS = {
         sos_title: 'SOS आपातकालीन टर्मिनल',
         sos_subtitle: 'संकट संकेत नेटवर्क // प्राथमिकता चैनल',
         select_emergency: 'आपातकालीन प्रकार चुनें',
-        fire: 'आग', flood: 'बाढ़', medical: 'चिकित्सा', earthquake: 'भूकंप', violence: 'हिंसा', other: 'अन्य',
+        fire: 'आग', flood: 'बाढ़', medical: 'चिकित्सा', earthquake: 'भूकंप', security: 'सुरक्षा', cyclone: 'चक्रवात', other: 'अन्य',
         send_sos: 'संकट संकेत प्रसारित करें',
         signal_transmitted: 'संकेत प्रसारित — मदद आ रही है',
         recording: 'ऑडियो संदेश रिकॉर्ड हो रहा है',
@@ -277,7 +281,7 @@ const TRANSLATIONS = {
         sos_title: 'SOS आणीबाणी टर्मिनल',
         sos_subtitle: 'संकट सिग्नल नेटवर्क // प्राधान्य चॅनेल',
         select_emergency: 'आणीबाणी प्रकार निवडा',
-        fire: 'आग', flood: 'पूर', medical: 'वैद्यकीय', earthquake: 'भूकंप', violence: 'हिंसा', other: 'इतर',
+        fire: 'आग', flood: 'पूर', medical: 'वैद्यकीय', earthquake: 'भूकंप', security: 'सुरक्षा', cyclone: 'चक्रीवादळ', other: 'इतर',
         send_sos: 'संकट सिग्नल प्रसारित करा',
         signal_transmitted: 'सिग्नल प्रसारित — मदत येत आहे',
         recording: 'ऑडिओ संदेश रेकॉर्ड होत आहे',

@@ -213,28 +213,48 @@
                             Category</h3>
                         <div class="grid grid-cols-3 gap-2 mb-6" id="type-buttons">
                             <button onclick="selectType('FIRE')" data-type="FIRE"
-                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                class="type-btn flex items-center justify-center flex-col gap-1 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
                                 <span
-                                    class="material-symbols-outlined text-red-500 group-hover:scale-110 text-xl">local_fire_department</span>
-                                <span class="text-xs font-bold uppercase">Fire</span>
+                                    class="material-symbols-outlined text-red-500 group-hover:scale-110 text-2xl">local_fire_department</span>
+                                <span class="text-[10px] font-bold uppercase text-center w-full truncate">Fire</span>
                             </button>
                             <button onclick="selectType('FLOOD')" data-type="FLOOD"
-                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                class="type-btn flex items-center justify-center flex-col gap-1 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
                                 <span
-                                    class="material-symbols-outlined text-blue-400 group-hover:scale-110 text-xl">water_damage</span>
-                                <span class="text-xs font-bold uppercase">Flood</span>
+                                    class="material-symbols-outlined text-blue-400 group-hover:scale-110 text-2xl">water_damage</span>
+                                <span class="text-[10px] font-bold uppercase text-center w-full truncate">Flood</span>
                             </button>
                             <button onclick="selectType('MEDICAL')" data-type="MEDICAL"
-                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                class="type-btn flex items-center justify-center flex-col gap-1 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
                                 <span
-                                    class="material-symbols-outlined text-primary group-hover:scale-110 text-xl">medical_services</span>
-                                <span class="text-xs font-bold uppercase">Medical</span>
+                                    class="material-symbols-outlined text-primary group-hover:scale-110 text-2xl">medical_services</span>
+                                <span class="text-[10px] font-bold uppercase text-center w-full truncate">Medical</span>
                             </button>
-                            <button onclick="selectType('ACCIDENT')" data-type="ACCIDENT"
-                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                            <button onclick="selectType('EARTHQUAKE')" data-type="EARTHQUAKE"
+                                class="type-btn flex items-center justify-center flex-col gap-1 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
                                 <span
-                                    class="material-symbols-outlined text-orange-400 group-hover:scale-110 text-xl">car_crash</span>
-                                <span class="text-xs font-bold uppercase">Accident</span>
+                                    class="material-symbols-outlined text-amber-500 group-hover:scale-110 text-2xl">public</span>
+                                <span
+                                    class="text-[10px] font-bold uppercase text-center w-full truncate">Earthquake</span>
+                            </button>
+                            <button onclick="selectType('SECURITY')" data-type="SECURITY"
+                                class="type-btn flex items-center justify-center flex-col gap-1 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                <span
+                                    class="material-symbols-outlined text-purple-400 group-hover:scale-110 text-2xl">security</span>
+                                <span
+                                    class="text-[10px] font-bold uppercase text-center w-full truncate">Security</span>
+                            </button>
+                            <button onclick="selectType('CYCLONE')" data-type="CYCLONE"
+                                class="type-btn flex items-center justify-center flex-col gap-1 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
+                                <span
+                                    class="material-symbols-outlined text-cyan-400 group-hover:scale-110 text-2xl">cyclone</span>
+                                <span class="text-[10px] font-bold uppercase text-center w-full truncate">Cyclone</span>
+                            </button>
+                            <button onclick="selectType('OTHER')" data-type="OTHER"
+                                class="type-btn flex items-center justify-center flex-col gap-1 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group col-span-3">
+                                <span
+                                    class="material-symbols-outlined text-slate-400 group-hover:scale-110 text-xl">warning</span>
+                                <span class="text-[10px] font-bold uppercase text-center w-full truncate">Other</span>
                             </button>
                         </div>
 
