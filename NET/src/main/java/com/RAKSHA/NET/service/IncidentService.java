@@ -4,7 +4,7 @@ import com.RAKSHA.NET.dto.SosRequest;
 import com.RAKSHA.NET.enums.IncidentStatus;
 import com.RAKSHA.NET.model.Incident;
 import com.RAKSHA.NET.repository.IncidentRepository;
-import com.RAKSHA.NET.util.GeoUtils;
+import com.RAKSHA.NET.Util.GeoUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -27,7 +27,7 @@ public class IncidentService {
         Incident incident = Incident.builder()
                 .latitude(req.getLatitude())
                 .longitude(req.getLongitude())
-                .incidentType(req.getIncidentType())
+                .incidentTypes(req.getIncidentType())
                 .severity(req.getSeverity())
                 .description(req.getDescription())
                 .status(IncidentStatus.ACTIVE)
