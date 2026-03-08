@@ -5,7 +5,7 @@
 
 const API = {
     AI_SERVICE: 'http://localhost:8001',
-    BACKEND: 'http://localhost:8080/api/sos',
+    BACKEND: 'http://localhost:8080/api/incidents/sos',
 };
 
 // ── API Helpers ──────────────────────────────────────────────
@@ -24,12 +24,26 @@ async function validateIncident(incident) {
     }
 }
 
-async function sendSOS(incident) {
+async function sendSOS(incident, aiResult) {
     try {
+        // Map AI severity to backend enum
+        const severityMap = {
+            'CRITICAL': 'HIGH',
+            'HIGH': 'HIGH',
+            'MEDIUM': 'MEDIUM',
+            'LOW': 'LOW'
+        };
+        const sosRequest = {
+            latitude: incident.lat,
+            longitude: incident.lng,
+            incidentType: incident.type,
+            severity: severityMap[aiResult.severity] || 'MEDIUM',
+            description: incident.description
+        };
         const res = await fetch(API.BACKEND, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(incident),
+            body: JSON.stringify(sosRequest),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return await res.json();

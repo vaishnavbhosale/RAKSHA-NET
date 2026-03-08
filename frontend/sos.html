@@ -230,23 +230,11 @@
                                     class="material-symbols-outlined text-primary group-hover:scale-110 text-xl">medical_services</span>
                                 <span class="text-xs font-bold uppercase">Medical</span>
                             </button>
-                            <button onclick="selectType('EARTHQUAKE')" data-type="EARTHQUAKE"
+                            <button onclick="selectType('ACCIDENT')" data-type="ACCIDENT"
                                 class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
                                 <span
-                                    class="material-symbols-outlined text-yellow-500 group-hover:scale-110 text-xl">earthquake</span>
-                                <span class="text-xs font-bold uppercase">Quake</span>
-                            </button>
-                            <button onclick="selectType('VIOLENCE')" data-type="VIOLENCE"
-                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
-                                <span
-                                    class="material-symbols-outlined text-orange-400 group-hover:scale-110 text-xl">security</span>
-                                <span class="text-xs font-bold uppercase">Danger</span>
-                            </button>
-                            <button onclick="selectType('OTHER')" data-type="OTHER"
-                                class="type-btn flex items-center gap-2 rounded border border-primary/30 bg-primary/5 p-3 transition-all hover:bg-primary/20 active:scale-95 group">
-                                <span
-                                    class="material-symbols-outlined text-slate-400 group-hover:scale-110 text-xl">report_problem</span>
-                                <span class="text-xs font-bold uppercase">Other</span>
+                                    class="material-symbols-outlined text-orange-400 group-hover:scale-110 text-xl">car_crash</span>
+                                <span class="text-xs font-bold uppercase">Accident</span>
                             </button>
                         </div>
 
@@ -673,7 +661,7 @@
             };
 
             const aiResult = await validateIncident(incident);
-            await sendSOS(incident);
+            await sendSOS(incident, aiResult);
 
             const entry = { ...incident, ...aiResult, status_msg: 'DISPATCHING', created: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) };
             sosHistory.unshift(entry);
@@ -718,8 +706,8 @@
             document.getElementById('stat-dispatched').textContent = dispatched;
             document.getElementById('stat-resolved').textContent = resolved;
 
-            const typeIcons = { FIRE: 'local_fire_department', FLOOD: 'water_damage', MEDICAL: 'medical_services', EARTHQUAKE: 'earthquake', VIOLENCE: 'security', OTHER: 'report_problem' };
-            const typeColors = { FIRE: 'text-red-500', FLOOD: 'text-blue-400', MEDICAL: 'text-primary', EARTHQUAKE: 'text-yellow-500', VIOLENCE: 'text-orange-400', OTHER: 'text-slate-400' };
+            const typeIcons = { FIRE: 'local_fire_department', FLOOD: 'water_damage', MEDICAL: 'medical_services', ACCIDENT: 'car_crash' };
+            const typeColors = { FIRE: 'text-red-500', FLOOD: 'text-blue-400', MEDICAL: 'text-primary', ACCIDENT: 'text-orange-400' };
 
             list.innerHTML = sosHistory.map((h, i) => {
                 const statusColors = i < 2 ? 'border-red-500/30 text-red-400' : i < 5 ? 'border-orange-400/30 text-orange-400' : 'border-primary/30 text-primary';
